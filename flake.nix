@@ -29,7 +29,9 @@
 
         in
         rec {
-          checks = packages;
+          checks = {
+            test-clicky-bunty = pkgs.callPackage ./tests.nix {};
+          }; 
           packages.clicky-bunty-backend = package;
           defaultPackage = package;
           overlay = (final: prev: {
