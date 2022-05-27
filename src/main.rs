@@ -1,28 +1,20 @@
 mod database;
-mod structs;
 mod endpoints;
+mod structs;
 
-pub use database::{DataBaseConnection, Region, Station, User, Role};
-use structs::Args;
+pub use database::{DataBaseConnection, Region, Role, Station, User};
 use endpoints::{
-    create_user, 
-    login, 
-    get_session,
-    delete_user,
-    modify_user,
-    create_station, 
-    list_stations, 
-    delete_station,
-    modify_station,
-    approve_station,
-    generate_token,
-    list_regions, 
-    Body
+    approve_station, create_region, create_station, create_user, delete_region, delete_station,
+    delete_user, generate_token, get_session, list_regions, list_stations, login, modify_region,
+    modify_station, modify_user, Body,
 };
-
+use structs::Args;
 
 use chrono::{DateTime, Utc};
 use clap::Parser;
+use regex::Regex;
+use serde::{Deserialize, Serialize};
+use serde_json;
 use std::env;
 use std::fs;
 use std::fs::File;
@@ -31,9 +23,6 @@ use std::ops::Deref;
 use std::sync::mpsc::channel;
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{SystemTime, UNIX_EPOCH};
-use regex::Regex;
-use serde::{Deserialize, Serialize};
-use serde_json;
 use tokio;
 use tonic::{transport::Server, Request, Response, Status};
 use tungstenite::accept;
@@ -60,9 +49,6 @@ pub struct UserConnection {
     user: Option<User>,
 }
 
-
-
-
 async fn process_message(
     connection: &mut UserConnection,
     message: &tungstenite::protocol::Message,
@@ -80,7 +66,7 @@ async fn process_message(
             return;
         }
     }
-    
+
     let authenticated = connection.user.is_some();
 
     match (command.as_str(), body, authenticated) {
@@ -89,16 +75,16 @@ async fn process_message(
         }
         ("user/login", Body::Login(parsed_struct), false) => {
             login(connection, parsed_struct).await;
-        },
+        }
         ("user/session", Body::Empty, true) => {
             get_session(connection).await;
-        },
+        }
         ("user/delete", Body::DeleteUser(parsed_struct), true) => {
             delete_user(connection, parsed_struct).await;
-        },
+        }
         ("user/modify", Body::UserModify(parsed_struct), true) => {
             modify_user(connection, parsed_struct).await;
-        },
+        }
         ("station/create", Body::CreateStation(parsed_struct), true) => {
             create_station(connection, parsed_struct).await;
         }
@@ -107,20 +93,28 @@ async fn process_message(
         }
         ("station/delete", Body::DeleteStation(parsed_struct), true) => {
             delete_station(connection, parsed_struct).await;
-        },
+        }
         ("station/modify", Body::ModifyStation(parsed_struct), true) => {
             modify_station(connection, parsed_struct).await;
-        },
+        }
         ("station/approve", Body::ApproveStation(parsed_struct), true) => {
             approve_station(connection, parsed_struct).await;
-        },
+        }
         ("station/generate_token", Body::GenerateToken(parsed_struct), true) => {
             generate_token(connection, parsed_struct).await;
-        },
+        }
+        ("region/create", Body::CreateRegion(parsed_struct), true) => {
+            create_region(connection, parsed_struct).await;
+        }
+        ("region/delete", Body::DeleteRegion(parsed_struct), true) => {
+            delete_region(connection, parsed_struct).await;
+        }
+        ("region/modify", Body::ModifyRegion(parsed_struct), true) => {
+            modify_region(connection, parsed_struct).await;
+        }
         ("region/list", Body::Empty, _) => {
             list_regions(connection).await;
         }
-
         (&_, _, _) => {}
     }
 }

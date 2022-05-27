@@ -1,38 +1,25 @@
+mod region;
 mod station;
 mod user;
-mod region;
 
-pub use super::{UserConnection, User, Station, Region, Role};
+pub use super::{Region, Role, Station, User, UserConnection};
 
-pub use user::{
-    create_user, 
-    login, 
-    get_session, 
-    delete_user, 
-    modify_user, 
-    RegisterUserRequest, 
-    LoginRequest,
-    ModifyUserRequest,
-    DeleteUserRequest,
-};
 pub use station::{
-    create_station, 
-    list_stations,
-    delete_station,
-    modify_station,
-    approve_station,
-    generate_token,
-    CreateStationRequest, 
-    ListStationsRequest,
-    DeleteStation,
+    approve_station, create_station, delete_station, generate_token, list_stations, modify_station,
+    ApproveStation, CreateStationRequest, DeleteStation, GenerateToken, ListStationsRequest,
     ModifyStation,
-    ApproveStation,
-    GenerateToken
+};
+pub use user::{
+    create_user, delete_user, get_session, login, modify_user, DeleteUserRequest, LoginRequest,
+    ModifyUserRequest, RegisterUserRequest,
 };
 
-pub use region::{list_regions};
+pub use region::{
+    create_region, delete_region, list_regions, modify_region, DeleteRegion, ModifyRegionRequest,
+    RegionRequest,
+};
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
 pub enum Body {
@@ -50,6 +37,9 @@ pub enum Body {
     GenerateToken(GenerateToken),
 
     ListStations(ListStationsRequest),
+    CreateRegion(RegionRequest),
+    DeleteRegion(DeleteRegion),
+    ModifyRegion(ModifyRegionRequest),
 }
 
 #[derive(Serialize)]

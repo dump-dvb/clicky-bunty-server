@@ -1,32 +1,31 @@
 extern crate postgres;
 
 use postgres::{Client, NoTls};
-use serde::{Serialize, Deserialize};
 use serde::ser::{SerializeStruct, Serializer};
-use std::env;
-use uuid::Uuid;
+use serde::{Deserialize, Serialize};
 use std::clone::Clone;
 use std::cmp::PartialEq;
+use std::env;
+use uuid::Uuid;
 
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
 pub enum Role {
     User = 6,
-    Administrator = 0
+    Administrator = 0,
 }
-
 
 impl Role {
     pub fn from(role: u32) -> Role {
         match role {
             0 => Role::Administrator,
-            _ => Role::User
+            _ => Role::User,
         }
     }
 
     pub fn as_int(&self) -> u32 {
         match self {
             Role::Administrator => 0,
-            _ => 6
+            _ => 6,
         }
     }
 }
@@ -36,7 +35,7 @@ pub struct User {
     pub name: String,
     pub email: String,
     pub password: String,
-    pub role: Role 
+    pub role: Role,
 }
 
 impl User {
@@ -180,6 +179,22 @@ impl DataBaseConnection {
             _ => None,
         }
     }
+
+    pub async fn query_region(&mut self, id: &u32) -> Option<Region> {
+        match self.postgres.query_one(
+            "SELECT id, name, transport_company, frequency, protocol FROM stations WHERE id=$1",
+            &[id],
+        ) {
+            Ok(data) => Some(Region {
+                id: data.get(0),
+                name: data.get(1),
+                transport_company: data.get(2),
+                frequency: data.get::<usize, i64>(3) as u64,
+                protocol: data.get(4),
+            }),
+            _ => None,
+        }
+    }
     pub async fn query_user(&mut self, name: &String) -> Option<User> {
         match self.postgres.query_one(
             "SELECT id, name, email, password FROM users WHERE name=$1",
@@ -190,7 +205,7 @@ impl DataBaseConnection {
                 name: data.get(1),
                 email: data.get(2),
                 password: data.get(3),
-                role: Role::from(data.get(4))
+                role: Role::from(data.get(4)),
             }),
             _ => None,
         }
@@ -206,7 +221,7 @@ impl DataBaseConnection {
                 name: data.get(1),
                 email: data.get(2),
                 password: data.get(3),
-                role: Role::from(data.get(4))
+                role: Role::from(data.get(4)),
             }),
             _ => None,
         }
@@ -221,22 +236,41 @@ impl DataBaseConnection {
         }
     }
 
-    pub async fn list_stations(&mut self, owner: Option<Uuid>, region: Option<u32>) -> Vec<Station> {
+    pub async fn list_stations(
+        &mut self,
+        owner: Option<Uuid>,
+        region: Option<u32>,
+    ) -> Vec<Station> {
         let mut station_list: Vec<Station> = Vec::new();
         let argumnet_count = owner.map_or_else(|| 0, |_| 1) + region.map_or_else(|| 0, |_| 1);
 
-        let owner_query = owner.map_or_else(|| String::from(""), |_| format!("WHERE owner=${} ", argumnet_count - 1));
-        let region_query = region.map_or_else(|| String::from(""), |_| format!("WHERE region=${}", argumnet_count));
+        let owner_query = owner.map_or_else(
+            || String::from(""),
+            |_| format!("WHERE owner=${} ", argumnet_count - 1),
+        );
+        let region_query = region.map_or_else(
+            || String::from(""),
+            |_| format!("WHERE region=${}", argumnet_count),
+        );
 
-        let query = format!("SELECT id, name, lat, lon, region, owner, approved FROM stations {}{}", owner_query, region_query);
+        let query = format!(
+            "SELECT id, name, lat, lon, region, owner, approved FROM stations {}{}",
+            owner_query, region_query
+        );
 
         let results;
 
         println!("Query {}", &query);
         if owner.is_some() && region.is_some() {
-            results = self.postgres.query(&query, &[&owner.unwrap().to_string(), &region.unwrap()]).unwrap();
+            results = self
+                .postgres
+                .query(&query, &[&owner.unwrap().to_string(), &region.unwrap()])
+                .unwrap();
         } else if owner.is_some() {
-            results = self.postgres.query(&query, &[&owner.unwrap().to_string()]).unwrap();
+            results = self
+                .postgres
+                .query(&query, &[&owner.unwrap().to_string()])
+                .unwrap();
         } else if region.is_some() {
             results = self.postgres.query(&query, &[&region.unwrap()]).unwrap();
         } else {
@@ -259,18 +293,23 @@ impl DataBaseConnection {
         station_list
     }
 
-    pub async fn list_regions(&mut self) -> Vec<Region>{
+    pub async fn list_regions(&mut self) -> Vec<Region> {
         let mut results = Vec::new();
-        for row in self.postgres.query("SELECT id, name, transport_company, frequency, protocol FROM regions", &[]).unwrap() {
-            results.push(
-                Region {
-                    id: row.get(0),
-                    name: row.get(1),
-                    transport_company: row.get(2),
-                    frequency: row.get::<usize, i64>(3) as u64, 
-                    protocol: row.get(4)
-                }
-            );
+        for row in self
+            .postgres
+            .query(
+                "SELECT id, name, transport_company, frequency, protocol FROM regions",
+                &[],
+            )
+            .unwrap()
+        {
+            results.push(Region {
+                id: row.get(0),
+                name: row.get(1),
+                transport_company: row.get(2),
+                frequency: row.get::<usize, i64>(3) as u64,
+                protocol: row.get(4),
+            });
         }
         results
     }
@@ -278,13 +317,28 @@ impl DataBaseConnection {
     pub async fn create_user(&mut self, user: &User) -> bool {
         self.postgres
             .execute(
-                "INSERT INTO users (id, name, email, password, role) VALUES ($1, $2, $3, $4)",
+                "INSERT INTO users (id, name, email, password, role) VALUES ($1, $2, $3, $4, $5)",
                 &[
                     &user.id.to_string(),
                     &user.name,
                     &user.email,
                     &user.password,
-                    &user.role.as_int()
+                    &user.role.as_int(),
+                ],
+            )
+            .is_ok()
+    }
+
+    pub async fn create_region(&mut self, user: &Region) -> bool {
+        self.postgres
+            .execute(
+                "INSERT INTO regions (id, name, transport_company, frequency, protocol) VALUES ($1, $2, $3, $4, $5)",
+                &[
+                    &user.id.to_string(),
+                    &user.name,
+                    &user.transport_company,
+                    &(user.frequency as i64),
+                    &user.protocol,
                 ],
             )
             .is_ok()
@@ -306,55 +360,75 @@ impl DataBaseConnection {
     }
 
     pub async fn first_user(&mut self) -> bool {
-        match self
-            .postgres
-            .query_one("SELECT 1 FROM users", &[])
-        {
+        match self.postgres.query_one("SELECT 1 FROM users", &[]) {
             Ok(_) => true,
             _ => false,
         }
     }
 
     pub async fn is_administrator(&mut self, uid: &String) -> bool {
-        match self.postgres.query_one("SELECT role FROM users WHERE id = $1", &[uid]) {
+        match self
+            .postgres
+            .query_one("SELECT role FROM users WHERE id = $1", &[uid])
+        {
             Ok(row) => row.get::<usize, i32>(0) == 0,
-            _ => false
+            _ => false,
         }
     }
 
     pub async fn get_owner_from_station(&mut self, region_id: &u32) -> Option<String> {
         match self.query_station(region_id).await {
-            Some(region) => {
-                Some(region.owner.to_string())
-            }
-            _ => {
-                None
-            }
+            Some(region) => Some(region.owner.to_string()),
+            _ => None,
         }
     }
 
     pub async fn delete_user(&mut self, uid: &String) -> bool {
-        self.postgres.execute("DELETE FROM users WHERE id=$1", &[uid]).is_ok()
+        self.postgres
+            .execute("DELETE FROM users WHERE id=$1", &[uid])
+            .is_ok()
     }
 
     pub async fn delete_region(&mut self, id: &u32) -> bool {
-        self.postgres.execute("DELETE FROM users WHERE id=$1", &[id]).is_ok()
+        self.postgres
+            .execute("DELETE FROM users WHERE id=$1", &[id])
+            .is_ok()
     }
 
     pub async fn delete_station(&mut self, id: &u32) -> bool {
-        self.postgres.execute("DELETE FROM users WHERE id=$1", &[id]).is_ok()
-   } 
+        self.postgres
+            .execute("DELETE FROM users WHERE id=$1", &[id])
+            .is_ok()
+    }
 
     pub async fn update_user(&mut self, user: &User) -> bool {
-        self.postgres.execute("UPDATE users SET name=$1, email=$2, password=$3, role=$4 WHERE id=$5", 
-                              &[&user.name, &user.email, &user.password, &user.role.as_int(), &user.id.to_string()]).is_ok()
-
+        self.postgres
+            .execute(
+                "UPDATE users SET name=$1, email=$2, password=$3, role=$4 WHERE id=$5",
+                &[
+                    &user.name,
+                    &user.email,
+                    &user.password,
+                    &user.role.as_int(),
+                    &user.id.to_string(),
+                ],
+            )
+            .is_ok()
     }
 
     pub async fn update_station(&mut self, station: &Station) -> bool {
-        self.postgres.execute("UPDATE station SET name=$1, lat=$2, lon=$3, region=$4 WHERE id=$5", 
-                              &[&station.name, &station.lat, &station.lon, &station.region, &station.id]).is_ok()
-
+        self.postgres
+            .execute(
+                "UPDATE station SET name=$1, lat=$2, lon=$3, region=$4 WHERE id=$5",
+                &[
+                    &station.name,
+                    &station.lat,
+                    &station.lon,
+                    &station.region,
+                    &station.id,
+                ],
+            )
+            .is_ok()
     }
 
     pub async fn update_region(&mut self, region: &Region) -> bool {
@@ -363,10 +437,17 @@ impl DataBaseConnection {
     }
 
     pub async fn set_approved(&mut self, id: &u32, approved: bool) -> bool {
-        self.postgres.execute("UPDATE station SET approved=$1 WHERE id=$2", &[&approved, id]).is_ok()
+        self.postgres
+            .execute(
+                "UPDATE station SET approved=$1 WHERE id=$2",
+                &[&approved, id],
+            )
+            .is_ok()
     }
 
     pub async fn set_token(&mut self, id: &u32, token: &String) -> bool {
-        self.postgres.execute("UPDATE station SET token=$1 WHERE id=$2", &[token, id]).is_ok()
+        self.postgres
+            .execute("UPDATE station SET token=$1 WHERE id=$2", &[token, id])
+            .is_ok()
     }
 }

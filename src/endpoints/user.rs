@@ -1,15 +1,15 @@
-use super::{UserConnection, ServiceResponse, User, Role};
+use super::{Role, ServiceResponse, User, UserConnection};
 
 use pbkdf2::{
     password_hash::{
-        rand_core::OsRng, Encoding, PasswordHash, PasswordHasher, PasswordVerifier, SaltString,
+        Encoding, PasswordHash, PasswordHasher, PasswordVerifier, SaltString,
     },
     Pbkdf2,
 };
 
-use uuid::Uuid;
 use regex::Regex;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Deserialize, Serialize)]
 pub struct RegisterUserRequest {
@@ -35,16 +35,16 @@ pub struct ModifyUserRequest {
 
 #[derive(Deserialize, Serialize)]
 pub struct DeleteUserRequest {
-    pub id: String
+    pub id: String,
 }
 
 #[derive(Deserialize, Serialize)]
 pub struct RequestUserSession {
-    pub id: String
+    pub id: String,
 }
 
 fn hash_password(password: &String) -> String {
-let default_salt_path = String::from("/run/secrets/clicky_bunty_salt");
+    let default_salt_path = String::from("/run/secrets/clicky_bunty_salt");
     let salt_path = std::env::var("SALT_PATH").unwrap_or(default_salt_path);
     let salt = SaltString::b64_encode(std::fs::read(salt_path).unwrap().as_slice()).unwrap();
 
@@ -67,21 +67,26 @@ pub async fn create_user(connection: &mut UserConnection, request: RegisterUserR
 
     let password_hash = hash_password(&request.password);
 
-    let role = if connection.database.lock().unwrap().first_user().await 
-        {Role::Administrator} else {Role::User};
+    let role = if connection.database.lock().unwrap().first_user().await {
+        Role::Administrator
+    } else {
+        Role::User
+    };
 
     let user = User {
         id: Uuid::new_v4(),
         name: request.name,
         email: request.email,
         password: password_hash,
-        role: role
+        role: role,
     };
 
     let result = connection.database.lock().unwrap().create_user(&user).await;
 
     let serialized = serde_json::to_string(&ServiceResponse { success: true }).unwrap();
-    connection.socket.write_message(tungstenite::Message::Text(serialized));
+    connection
+        .socket
+        .write_message(tungstenite::Message::Text(serialized));
 }
 
 pub async fn login(connection: &mut UserConnection, request: LoginRequest) {
@@ -101,49 +106,81 @@ pub async fn login(connection: &mut UserConnection, request: LoginRequest) {
             match Pbkdf2.verify_password(request.password.as_bytes(), &password_hash) {
                 Ok(_) => {
                     connection.user = Some(user);
-                    let serialized = serde_json::to_string(&ServiceResponse { success: true }).unwrap();
-                    connection.socket.write_message(tungstenite::Message::Text(serialized));
+                    let serialized =
+                        serde_json::to_string(&ServiceResponse { success: true }).unwrap();
+                    connection
+                        .socket
+                        .write_message(tungstenite::Message::Text(serialized));
                     return;
                 }
                 _ => {}
             }
         }
-        _ => { }
+        _ => {}
     }
     let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
-    connection.socket.write_message(tungstenite::Message::Text(serialized));
+    connection
+        .socket
+        .write_message(tungstenite::Message::Text(serialized));
 }
 
 pub async fn get_session(connection: &mut UserConnection) {
-    let serialized = serde_json::to_string(&RequestUserSession { 
-        id: connection.user.as_ref().unwrap().id.to_string() 
-    }).unwrap();
-    connection.socket.write_message(tungstenite::Message::Text(serialized));
+    let serialized = serde_json::to_string(&RequestUserSession {
+        id: connection.user.as_ref().unwrap().id.to_string(),
+    })
+    .unwrap();
+    connection
+        .socket
+        .write_message(tungstenite::Message::Text(serialized));
 }
 
 pub async fn delete_user(connection: &mut UserConnection, delete_request: DeleteUserRequest) {
     let user_id = connection.user.as_ref().unwrap().id.to_string();
 
-    if connection.database.lock().unwrap().is_administrator(&user_id).await || user_id == delete_request.id 
-        {
-        connection.database.lock().unwrap().delete_user(&delete_request.id).await;
+    if connection
+        .database
+        .lock()
+        .unwrap()
+        .is_administrator(&user_id)
+        .await
+        || user_id == delete_request.id
+    {
+        connection
+            .database
+            .lock()
+            .unwrap()
+            .delete_user(&delete_request.id)
+            .await;
     } else {
         let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
-        connection.socket.write_message(tungstenite::Message::Text(serialized));
-    } 
+        connection
+            .socket
+            .write_message(tungstenite::Message::Text(serialized));
+    }
 }
 
 pub async fn modify_user(connection: &mut UserConnection, modify_request: ModifyUserRequest) {
-    let user_struct_result = connection.database.lock().unwrap().query_user_by_id(&modify_request.id).await;
+    let user_struct_result = connection
+        .database
+        .lock()
+        .unwrap()
+        .query_user_by_id(&modify_request.id)
+        .await;
     if user_struct_result.is_none() {
         return;
     }
 
-    let user_struct= user_struct_result.unwrap();
+    let user_struct = user_struct_result.unwrap();
     let user_id = connection.user.as_ref().unwrap().id.to_string();
 
-    if connection.database.lock().unwrap().is_administrator(&user_id).await || user_id == modify_request.id {
-
+    if connection
+        .database
+        .lock()
+        .unwrap()
+        .is_administrator(&user_id)
+        .await
+        || user_id == modify_request.id
+    {
         let hashed_password: String;
         match &modify_request.password {
             Some(password) => {
@@ -159,10 +196,12 @@ pub async fn modify_user(connection: &mut UserConnection, modify_request: Modify
             name: modify_request.name.clone().unwrap_or(user_struct.name),
             email: modify_request.email.clone().unwrap_or(user_struct.email),
             password: hashed_password,
-            role: modify_request.role.clone().unwrap_or(user_struct.role)
+            role: modify_request.role.clone().unwrap_or(user_struct.role),
         });
     } else {
         let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
-        connection.socket.write_message(tungstenite::Message::Text(serialized));
-    } 
+        connection
+            .socket
+            .write_message(tungstenite::Message::Text(serialized));
+    }
 }
