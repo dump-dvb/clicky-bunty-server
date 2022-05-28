@@ -83,10 +83,10 @@ pub async fn create_user(connection: &mut UserConnection, request: RegisterUserR
 
     let result = connection.database.lock().unwrap().create_user(&user).await;
 
-    let serialized = serde_json::to_string(&ServiceResponse { success: true }).unwrap();
+    let serialized = serde_json::to_string(&ServiceResponse { success: result }).unwrap();
     connection
         .socket
-        .write_message(tungstenite::Message::Text(serialized));
+        .write_message(tungstenite::Message::Text(serialized)).unwrap();
 }
 
 pub async fn login(connection: &mut UserConnection, request: LoginRequest) {
@@ -98,10 +98,6 @@ pub async fn login(connection: &mut UserConnection, request: LoginRequest) {
         .await
     {
         Some(user) => {
-            let default_salt_path = String::from("/run/secrets/clicky_bunty_salt");
-            let salt_path = std::env::var("SALT_PATH").unwrap_or(default_salt_path);
-            let salt =
-                SaltString::b64_encode(std::fs::read(salt_path).unwrap().as_slice()).unwrap();
             let password_hash = PasswordHash::parse(&user.password, Encoding::B64).unwrap();
             match Pbkdf2.verify_password(request.password.as_bytes(), &password_hash) {
                 Ok(_) => {
@@ -110,7 +106,7 @@ pub async fn login(connection: &mut UserConnection, request: LoginRequest) {
                         serde_json::to_string(&ServiceResponse { success: true }).unwrap();
                     connection
                         .socket
-                        .write_message(tungstenite::Message::Text(serialized));
+                        .write_message(tungstenite::Message::Text(serialized)).unwrap();
                     return;
                 }
                 _ => {}
@@ -121,7 +117,7 @@ pub async fn login(connection: &mut UserConnection, request: LoginRequest) {
     let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
     connection
         .socket
-        .write_message(tungstenite::Message::Text(serialized));
+        .write_message(tungstenite::Message::Text(serialized)).unwrap();
 }
 
 pub async fn get_session(connection: &mut UserConnection) {
@@ -131,7 +127,7 @@ pub async fn get_session(connection: &mut UserConnection) {
     .unwrap();
     connection
         .socket
-        .write_message(tungstenite::Message::Text(serialized));
+        .write_message(tungstenite::Message::Text(serialized)).unwrap();
 }
 
 pub async fn delete_user(connection: &mut UserConnection, delete_request: DeleteUserRequest) {
@@ -155,7 +151,7 @@ pub async fn delete_user(connection: &mut UserConnection, delete_request: Delete
         let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
         connection
             .socket
-            .write_message(tungstenite::Message::Text(serialized));
+            .write_message(tungstenite::Message::Text(serialized)).unwrap();
     }
 }
 
@@ -197,11 +193,11 @@ pub async fn modify_user(connection: &mut UserConnection, modify_request: Modify
             email: modify_request.email.clone().unwrap_or(user_struct.email),
             password: hashed_password,
             role: modify_request.role.clone().unwrap_or(user_struct.role),
-        });
+        }).await;
     } else {
         let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
         connection
             .socket
-            .write_message(tungstenite::Message::Text(serialized));
+            .write_message(tungstenite::Message::Text(serialized)).unwrap();
     }
 }

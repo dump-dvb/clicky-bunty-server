@@ -94,12 +94,12 @@ pub async fn create_station(connection: &mut UserConnection, request: CreateStat
         let serialized = serde_json::to_string(&ServiceResponse { success: result }).unwrap();
         connection
             .socket
-            .write_message(tungstenite::Message::Text(serialized));
+            .write_message(tungstenite::Message::Text(serialized)).unwrap();
     } else {
         let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
         connection
             .socket
-            .write_message(tungstenite::Message::Text(serialized));
+            .write_message(tungstenite::Message::Text(serialized)).unwrap();
     }
 }
 
@@ -108,24 +108,29 @@ pub async fn list_stations(connection: &mut UserConnection, request: ListStation
         .database
         .lock()
         .unwrap()
-        .list_stations(None, None)
+        .list_stations(request.owner, request.region)
         .await;
 
     let serialized = serde_json::to_string(&data).unwrap();
     connection
         .socket
-        .write_message(tungstenite::Message::Text(serialized));
+        .write_message(tungstenite::Message::Text(serialized)).unwrap();
 }
 
 pub async fn delete_station(connection: &mut UserConnection, request: DeleteStation) {
+    let mut result_query = false;
     if connection.user.as_ref().unwrap().is_admin() || owns_station(connection, &request.id).await {
-        let result_quert = connection
+        result_query = connection
             .database
             .lock()
             .unwrap()
             .delete_station(&request.id)
             .await;
     }
+    let serialized = serde_json::to_string(&ServiceResponse { success: result_query }).unwrap();
+    connection
+        .socket
+        .write_message(tungstenite::Message::Text(serialized)).unwrap();
 }
 
 pub async fn modify_station(connection: &mut UserConnection, request: ModifyStation) {

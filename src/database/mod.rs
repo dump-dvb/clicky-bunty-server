@@ -238,13 +238,13 @@ impl DataBaseConnection {
 
     pub async fn list_stations(
         &mut self,
-        owner: Option<Uuid>,
+        owner: Option<String>,
         region: Option<u32>,
     ) -> Vec<Station> {
         let mut station_list: Vec<Station> = Vec::new();
-        let argumnet_count = owner.map_or_else(|| 0, |_| 1) + region.map_or_else(|| 0, |_| 1);
+        let argumnet_count = owner.clone().map_or_else(|| 0, |_| 1) + region.map_or_else(|| 0, |_| 1);
 
-        let owner_query = owner.map_or_else(
+        let owner_query = owner.clone().map_or_else(
             || String::from(""),
             |_| format!("WHERE owner=${} ", argumnet_count - 1),
         );

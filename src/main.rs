@@ -10,21 +10,11 @@ use endpoints::{
 };
 use structs::Args;
 
-use chrono::{DateTime, Utc};
 use clap::Parser;
-use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json;
-use std::env;
-use std::fs;
-use std::fs::File;
-use std::io::Write;
-use std::ops::Deref;
-use std::sync::mpsc::channel;
-use std::sync::{Arc, Mutex, RwLock};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::sync::{Arc, Mutex};
 use tokio;
-use tonic::{transport::Server, Request, Response, Status};
 use tungstenite::accept;
 
 use std::net::TcpListener;
@@ -148,7 +138,7 @@ async fn main() {
                     database: current_run.clone(),
                     socket: websocket,
                     user: None,
-                });
+                }).await;
             }
             _ => {}
         };

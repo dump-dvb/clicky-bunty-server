@@ -39,7 +39,7 @@ pub async fn create_region(connection: &mut UserConnection, request: RegionReque
     let serialized = serde_json::to_string(&ServiceResponse { success: result }).unwrap();
     connection
         .socket
-        .write_message(tungstenite::Message::Text(serialized));
+        .write_message(tungstenite::Message::Text(serialized)).unwrap();
 }
 
 pub async fn modify_region(connection: &mut UserConnection, request: ModifyRegionRequest) {
@@ -54,7 +54,7 @@ pub async fn modify_region(connection: &mut UserConnection, request: ModifyRegio
         let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
         connection
             .socket
-            .write_message(tungstenite::Message::Text(serialized));
+            .write_message(tungstenite::Message::Text(serialized)).unwrap();
 
         return;
     }
@@ -78,7 +78,7 @@ pub async fn modify_region(connection: &mut UserConnection, request: ModifyRegio
     let serialized = serde_json::to_string(&ServiceResponse { success: result }).unwrap();
     connection
         .socket
-        .write_message(tungstenite::Message::Text(serialized));
+        .write_message(tungstenite::Message::Text(serialized)).unwrap();
 }
 
 pub async fn delete_region(connection: &mut UserConnection, request: DeleteRegion) {
@@ -88,10 +88,11 @@ pub async fn delete_region(connection: &mut UserConnection, request: DeleteRegio
         .unwrap()
         .delete_region(&request.id)
         .await;
+
     let serialized = serde_json::to_string(&ServiceResponse { success: result }).unwrap();
     connection
         .socket
-        .write_message(tungstenite::Message::Text(serialized));
+        .write_message(tungstenite::Message::Text(serialized)).unwrap();
 }
 
 pub async fn list_regions(connection: &mut UserConnection) {
@@ -100,5 +101,5 @@ pub async fn list_regions(connection: &mut UserConnection) {
     let serialized = serde_json::to_string(&data).unwrap();
     connection
         .socket
-        .write_message(tungstenite::Message::Text(serialized));
+        .write_message(tungstenite::Message::Text(serialized)).unwrap();
 }
