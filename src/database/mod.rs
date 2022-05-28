@@ -103,8 +103,10 @@ impl Serialize for Station {
 impl DataBaseConnection {
     pub async fn new() -> DataBaseConnection {
         let default_postgres_host = String::from("localhost:5433");
+
         let postgres_host = format!(
-            "posgresql://dvbdump@{}",
+            "posgresql://dvbdump:{}@{}/dvbdump",
+            env::var("POSTGRES_PASSWORD").unwrap(),
             env::var("POSTGRES").unwrap_or(default_postgres_host)
         );
 

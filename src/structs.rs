@@ -18,6 +18,6 @@ pub struct Args {
     #[clap(short, long, default_value_t = String::from("127.0.0.1"))]
     pub host: String,
 
-    #[clap(short, long, default_value_t = 8090)]
+    #[clap(short, long, default_value_t = 8070)]
     pub port: u16,
 }
