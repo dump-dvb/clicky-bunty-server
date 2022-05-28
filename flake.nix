@@ -32,10 +32,10 @@
           checks = {
             test-clicky-bunty = pkgs.callPackage ./tests.nix {};
           }; 
-          packages.clicky-bunty-backend = package;
+          packages.clicky-bunty-server = package;
           defaultPackage = package;
           overlay = (final: prev: {
-            clicky-bunty-backend = package;
+            clicky-bunty-server = package;
           });
         }
       ) // {
