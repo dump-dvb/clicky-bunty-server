@@ -162,21 +162,33 @@ pub async fn modify_user(connection: &mut UserConnection, modify_request: Modify
         .unwrap()
         .query_user_by_id(&modify_request.id)
         .await;
+
     if user_struct_result.is_none() {
         return;
     }
 
     let user_struct = user_struct_result.unwrap();
     let user_id = connection.user.as_ref().unwrap().id.to_string();
-
-    if connection
+    let admin = connection
         .database
         .lock()
         .unwrap()
         .is_administrator(&user_id)
-        .await
-        || user_id == modify_request.id
+        .await;
+
+    if admin || user_id == modify_request.id
     {
+
+        if !admin && modify_request.role.is_some() {
+            // only admins can change the role of a suer
+            let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
+            connection
+                .socket
+                .write_message(tungstenite::Message::Text(serialized)).unwrap();
+
+            return;
+        }
+
         let hashed_password: String;
         match &modify_request.password {
             Some(password) => {

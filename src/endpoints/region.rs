@@ -23,7 +23,25 @@ pub struct ModifyRegionRequest {
     pub protocol: Option<String>,
 }
 
+fn admin(connection: &mut UserConnection) -> bool {
+    connection.user.as_ref().unwrap().is_admin()
+}
+
+fn write_error(connection: &mut UserConnection) {
+  let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
+    connection
+        .socket
+        .write_message(tungstenite::Message::Text(serialized)).unwrap();
+
+}
+
+
 pub async fn create_region(connection: &mut UserConnection, request: RegionRequest) {
+    if !admin(connection) {
+        write_error(connection);
+        return;
+    }
+
     let result = connection
         .database
         .lock()
@@ -43,6 +61,11 @@ pub async fn create_region(connection: &mut UserConnection, request: RegionReque
 }
 
 pub async fn modify_region(connection: &mut UserConnection, request: ModifyRegionRequest) {
+    if !admin(connection) {
+        write_error(connection);
+        return;
+    }
+
     let result_region = connection
         .database
         .lock()
@@ -82,6 +105,11 @@ pub async fn modify_region(connection: &mut UserConnection, request: ModifyRegio
 }
 
 pub async fn delete_region(connection: &mut UserConnection, request: DeleteRegion) {
+    if !admin(connection) {
+        write_error(connection);
+        return;
+    }
+
     let result = connection
         .database
         .lock()
