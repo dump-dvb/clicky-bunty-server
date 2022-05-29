@@ -110,6 +110,7 @@ impl DataBaseConnection {
             env::var("POSTGRES").unwrap_or(default_postgres_host)
         );
 
+        println!("Connecting to Database at {}", postgres_host);
         let mut database = DataBaseConnection {
             postgres: Client::connect(&postgres_host, NoTls).unwrap(),
         };
