@@ -1,6 +1,6 @@
 extern crate postgres;
 
-use postgres::{Client, NoTls};
+use postgres::{Client, NoTls, config::SslMode};
 use serde::ser::{SerializeStruct, Serializer};
 use serde::{Deserialize, Serialize};
 use std::clone::Clone;
@@ -103,16 +103,25 @@ impl Serialize for Station {
 impl DataBaseConnection {
     pub async fn new() -> DataBaseConnection {
         let default_postgres_host = String::from("localhost:5433");
+        let default_postgres_port = String::from("5432");
 
         let postgres_host = format!(
-            "posgresql://dvbdump:{}@{}/dvbdump",
+            "posgresql://dvbdump:{}@{}:{}/dvbdump",
             env::var("POSTGRES_PASSWORD").unwrap(),
-            env::var("POSTGRES").unwrap_or(default_postgres_host)
+            env::var("POSTGRES_HOST").unwrap_or(default_postgres_host.clone()),
+            env::var("POSTGRES_PORT").unwrap_or(default_postgres_port.clone())
         );
 
         println!("Connecting to Database at {}", postgres_host);
         let mut database = DataBaseConnection {
-            postgres: Client::connect(&postgres_host, NoTls).unwrap(),
+            postgres: Client::configure()
+                .user("dvbdump")
+                .password(env::var("POSTGRES_PASSWORD").unwrap())
+                .dbname("dvbdump")
+                .host(&env::var("POSTGRES_HOST").unwrap_or(default_postgres_host))
+                .port(env::var("POSTGRES_PORT").unwrap_or(default_postgres_port).parse::<u16>().unwrap())
+                .ssl_mode(SslMode::Disable)
+                .connect(NoTls).unwrap(),
         };
 
         database.create_tables().await;
