@@ -130,7 +130,7 @@ impl DataBaseConnection {
     }
 
     pub  fn create_tables(&mut self) {
-        self.postgres
+        match self.postgres
             .execute(
                 "CREATE TABLE users (
                     id              UUID PRIMARY KEY,
@@ -140,23 +140,27 @@ impl DataBaseConnection {
                     role            INT NOT NULL
                   )",
                 &[],
-            )
-            .unwrap();
+        ) {
+            Err(_) => {println!("Did not create table user maybe it already exists!")},
+            _ => {}
+        }
 
-        self.postgres
+        match self.postgres
             .execute(
                 "CREATE TABLE regions (
                     id              SERIAL PRIMARY KEY,
                     name            TEXT NOT NULL,
                     transport_company TEXT NOT NULL,
-                    frequency       INT NOT NULL,
+                    frequency       BIGINT NOT NULL,
                     protocol        TEXT NOT NULL
                   )",
                 &[],
-            )
-            .unwrap();
+        ) {
+            Err(_) => {println!("Did not create table regions maybe it already exists!")},
+            _ => {}
+        }
 
-        self.postgres
+        match self.postgres
             .execute(
                 "CREATE TABLE stations (
                     id              SERIAL PRIMARY KEY,
@@ -164,13 +168,15 @@ impl DataBaseConnection {
                     name            TEXT NOT NULL,
                     lat             DOUBLE NOT NULL CONSTRAINT lat <= 180 CONSTRAINT lat >= -180,
                     lon             DOUBLE NOT NULL CONSTRAINT lon <= 90 CONSTRAINT lon >= -90,
-                    region          SERIAL REFERENCES regions (id) NOT NULL,
+                    region          INT regions (id) NOT NULL,
                     owner           UUID REFERENCES users (id) NOT NULL,
                     approved        BOOLEAN NOT NULL
                   )",
                 &[],
-            )
-            .unwrap();
+        ) {
+            Err(_) => {println!("Did not create table stations maybe it already exists!")},
+            _ => {}
+        }
     }
 
     pub  fn query_station(&mut self, token: &u32) -> Option<Station> {
