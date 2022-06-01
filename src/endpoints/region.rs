@@ -52,8 +52,7 @@ pub async fn create_region(connection: &mut UserConnection, request: RegionReque
             transport_company: request.transport_company,
             frequency: request.frequency,
             protocol: request.protocol,
-        })
-        .await;
+        });
     let serialized = serde_json::to_string(&ServiceResponse { success: result }).unwrap();
     connection
         .socket
@@ -70,8 +69,7 @@ pub async fn modify_region(connection: &mut UserConnection, request: ModifyRegio
         .database
         .lock()
         .unwrap()
-        .query_region(&request.id)
-        .await;
+        .query_region(&request.id);
 
     if result_region.is_none() {
         let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
@@ -96,8 +94,7 @@ pub async fn modify_region(connection: &mut UserConnection, request: ModifyRegio
                 .unwrap_or(region.transport_company),
             frequency: request.frequency.unwrap_or(region.frequency),
             protocol: request.protocol.unwrap_or(region.protocol),
-        })
-        .await;
+        });
     let serialized = serde_json::to_string(&ServiceResponse { success: result }).unwrap();
     connection
         .socket
@@ -114,8 +111,7 @@ pub async fn delete_region(connection: &mut UserConnection, request: DeleteRegio
         .database
         .lock()
         .unwrap()
-        .delete_region(&request.id)
-        .await;
+        .delete_region(&request.id);
 
     let serialized = serde_json::to_string(&ServiceResponse { success: result }).unwrap();
     connection
@@ -124,7 +120,7 @@ pub async fn delete_region(connection: &mut UserConnection, request: DeleteRegio
 }
 
 pub async fn list_regions(connection: &mut UserConnection) {
-    let data = connection.database.lock().unwrap().list_regions().await;
+    let data = connection.database.lock().unwrap().list_regions();
 
     let serialized = serde_json::to_string(&data).unwrap();
     connection

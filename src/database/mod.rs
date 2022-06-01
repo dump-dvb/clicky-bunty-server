@@ -101,7 +101,7 @@ impl Serialize for Station {
 }
 
 impl DataBaseConnection {
-    pub async fn new() -> DataBaseConnection {
+    pub  fn new() -> DataBaseConnection {
         let default_postgres_host = String::from("localhost:5433");
         let default_postgres_port = String::from("5432");
 
@@ -123,13 +123,13 @@ impl DataBaseConnection {
                 .ssl_mode(SslMode::Disable)
                 .connect(NoTls).unwrap(),
         };
-
-        database.create_tables().await;
+        println!("Creating Database Tables !");
+        database.create_tables();
 
         return database;
     }
 
-    pub async fn create_tables(&mut self) {
+    pub  fn create_tables(&mut self) {
         self.postgres
             .execute(
                 "CREATE TABLE users (
@@ -173,7 +173,7 @@ impl DataBaseConnection {
             .unwrap();
     }
 
-    pub async fn query_station(&mut self, token: &u32) -> Option<Station> {
+    pub  fn query_station(&mut self, token: &u32) -> Option<Station> {
         match self.postgres.query_one(
             "SELECT token, id, name, lat, lon, region, owner, approved FROM stations WHERE id=$1",
             &[&token],
@@ -192,7 +192,7 @@ impl DataBaseConnection {
         }
     }
 
-    pub async fn query_region(&mut self, id: &u32) -> Option<Region> {
+    pub  fn query_region(&mut self, id: &u32) -> Option<Region> {
         match self.postgres.query_one(
             "SELECT id, name, transport_company, frequency, protocol FROM stations WHERE id=$1",
             &[id],
@@ -207,7 +207,7 @@ impl DataBaseConnection {
             _ => None,
         }
     }
-    pub async fn query_user(&mut self, name: &String) -> Option<User> {
+    pub  fn query_user(&mut self, name: &String) -> Option<User> {
         match self.postgres.query_one(
             "SELECT id, name, email, password FROM users WHERE name=$1",
             &[&name],
@@ -223,7 +223,7 @@ impl DataBaseConnection {
         }
     }
 
-    pub async fn query_user_by_id(&mut self, id: &String) -> Option<User> {
+    pub  fn query_user_by_id(&mut self, id: &String) -> Option<User> {
         match self.postgres.query_one(
             "SELECT id, name, email, password FROM users WHERE id=$1",
             &[id],
@@ -238,7 +238,7 @@ impl DataBaseConnection {
             _ => None,
         }
     }
-    pub async fn check_region_exists(&mut self, id: u32) -> bool {
+    pub  fn check_region_exists(&mut self, id: u32) -> bool {
         match self
             .postgres
             .query_one("SELECT 1 FROM regions WHERE id = $1", &[&id])
@@ -248,7 +248,7 @@ impl DataBaseConnection {
         }
     }
 
-    pub async fn list_stations(
+    pub  fn list_stations(
         &mut self,
         owner: Option<String>,
         region: Option<u32>,
@@ -305,7 +305,7 @@ impl DataBaseConnection {
         station_list
     }
 
-    pub async fn list_regions(&mut self) -> Vec<Region> {
+    pub  fn list_regions(&mut self) -> Vec<Region> {
         let mut results = Vec::new();
         for row in self
             .postgres
@@ -326,7 +326,7 @@ impl DataBaseConnection {
         results
     }
 
-    pub async fn create_user(&mut self, user: &User) -> bool {
+    pub  fn create_user(&mut self, user: &User) -> bool {
         self.postgres
             .execute(
                 "INSERT INTO users (id, name, email, password, role) VALUES ($1, $2, $3, $4, $5)",
@@ -341,7 +341,7 @@ impl DataBaseConnection {
             .is_ok()
     }
 
-    pub async fn create_region(&mut self, user: &Region) -> bool {
+    pub  fn create_region(&mut self, user: &Region) -> bool {
         self.postgres
             .execute(
                 "INSERT INTO regions (id, name, transport_company, frequency, protocol) VALUES ($1, $2, $3, $4, $5)",
@@ -356,7 +356,7 @@ impl DataBaseConnection {
             .is_ok()
     }
 
-    pub async fn create_station(&mut self, station: &Station) -> bool {
+    pub  fn create_station(&mut self, station: &Station) -> bool {
         self.postgres.execute(
             "INSERT INTO users (token, name, lat, lon, region, owner, approved) VALUES ($1, $2, $3, $4, $5, $6, $7)",
             &[
@@ -371,14 +371,14 @@ impl DataBaseConnection {
         ).is_ok()
     }
 
-    pub async fn first_user(&mut self) -> bool {
+    pub  fn first_user(&mut self) -> bool {
         match self.postgres.query_one("SELECT 1 FROM users", &[]) {
             Ok(_) => true,
             _ => false,
         }
     }
 
-    pub async fn is_administrator(&mut self, uid: &String) -> bool {
+    pub  fn is_administrator(&mut self, uid: &String) -> bool {
         match self
             .postgres
             .query_one("SELECT role FROM users WHERE id = $1", &[uid])
@@ -388,32 +388,32 @@ impl DataBaseConnection {
         }
     }
 
-    pub async fn get_owner_from_station(&mut self, region_id: &u32) -> Option<String> {
-        match self.query_station(region_id).await {
+    pub  fn get_owner_from_station(&mut self, region_id: &u32) -> Option<String> {
+        match self.query_station(region_id){
             Some(region) => Some(region.owner.to_string()),
             _ => None,
         }
     }
 
-    pub async fn delete_user(&mut self, uid: &String) -> bool {
+    pub  fn delete_user(&mut self, uid: &String) -> bool {
         self.postgres
             .execute("DELETE FROM users WHERE id=$1", &[uid])
             .is_ok()
     }
 
-    pub async fn delete_region(&mut self, id: &u32) -> bool {
+    pub  fn delete_region(&mut self, id: &u32) -> bool {
         self.postgres
             .execute("DELETE FROM users WHERE id=$1", &[id])
             .is_ok()
     }
 
-    pub async fn delete_station(&mut self, id: &u32) -> bool {
+    pub  fn delete_station(&mut self, id: &u32) -> bool {
         self.postgres
             .execute("DELETE FROM users WHERE id=$1", &[id])
             .is_ok()
     }
 
-    pub async fn update_user(&mut self, user: &User) -> bool {
+    pub  fn update_user(&mut self, user: &User) -> bool {
         self.postgres
             .execute(
                 "UPDATE users SET name=$1, email=$2, password=$3, role=$4 WHERE id=$5",
@@ -428,7 +428,7 @@ impl DataBaseConnection {
             .is_ok()
     }
 
-    pub async fn update_station(&mut self, station: &Station) -> bool {
+    pub  fn update_station(&mut self, station: &Station) -> bool {
         self.postgres
             .execute(
                 "UPDATE station SET name=$1, lat=$2, lon=$3, region=$4 WHERE id=$5",
@@ -443,12 +443,12 @@ impl DataBaseConnection {
             .is_ok()
     }
 
-    pub async fn update_region(&mut self, region: &Region) -> bool {
+    pub  fn update_region(&mut self, region: &Region) -> bool {
         self.postgres.execute("UPDATE region SET name=$1, transport_company=$2, frequency=$3, protocol=$4 WHERE id=$5",
                               &[&region.name, &region.transport_company, &(region.frequency as i64), &region.protocol, &(region.id as i64)]).is_ok()
     }
 
-    pub async fn set_approved(&mut self, id: &u32, approved: bool) -> bool {
+    pub fn set_approved(&mut self, id: &u32, approved: bool) -> bool {
         self.postgres
             .execute(
                 "UPDATE station SET approved=$1 WHERE id=$2",
@@ -457,7 +457,7 @@ impl DataBaseConnection {
             .is_ok()
     }
 
-    pub async fn set_token(&mut self, id: &u32, token: &String) -> bool {
+    pub fn set_token(&mut self, id: &u32, token: &String) -> bool {
         self.postgres
             .execute("UPDATE station SET token=$1 WHERE id=$2", &[token, id])
             .is_ok()

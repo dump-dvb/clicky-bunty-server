@@ -126,21 +126,24 @@ async fn main() {
 
     let host = args.host.as_str();
     let port = args.port;
-    let current_run = Arc::new(Mutex::new(DataBaseConnection::new().await));
+    let current_run = Arc::new(Mutex::new(DataBaseConnection::new()));
 
     println!("Listening on: {}:{}", host, port);
     println!("Opening Websocket Sever ...");
     let server = TcpListener::bind(format!("{}:{}", host, port)).unwrap();
     for stream in server.incoming() {
-        match accept(stream.unwrap()) {
-            Ok(websocket) => {
-                listen(UserConnection {
-                    database: current_run.clone(),
-                    socket: websocket,
-                    user: None,
-                }).await;
-            }
-            _ => {}
-        };
+        let current_run_clone = current_run.clone();
+        tokio::spawn( async move {
+            match accept(stream.unwrap()) {
+                Ok(websocket) => {
+                    listen(UserConnection {
+                        database: current_run_clone,
+                        socket: websocket,
+                        user: None,
+                    }).await;
+                }
+                _ => {}
+            };
+        });
     }
 }

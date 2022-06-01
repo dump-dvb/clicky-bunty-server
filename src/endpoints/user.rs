@@ -67,7 +67,7 @@ pub async fn create_user(connection: &mut UserConnection, request: RegisterUserR
 
     let password_hash = hash_password(&request.password);
 
-    let role = if connection.database.lock().unwrap().first_user().await {
+    let role = if connection.database.lock().unwrap().first_user() {
         Role::Administrator
     } else {
         Role::User
@@ -81,7 +81,7 @@ pub async fn create_user(connection: &mut UserConnection, request: RegisterUserR
         role: role,
     };
 
-    let result = connection.database.lock().unwrap().create_user(&user).await;
+    let result = connection.database.lock().unwrap().create_user(&user);
 
     let serialized = serde_json::to_string(&ServiceResponse { success: result }).unwrap();
     connection
@@ -95,7 +95,6 @@ pub async fn login(connection: &mut UserConnection, request: LoginRequest) {
         .lock()
         .unwrap()
         .query_user(&request.name)
-        .await
     {
         Some(user) => {
             let password_hash = PasswordHash::parse(&user.password, Encoding::B64).unwrap();
@@ -138,15 +137,13 @@ pub async fn delete_user(connection: &mut UserConnection, delete_request: Delete
         .lock()
         .unwrap()
         .is_administrator(&user_id)
-        .await
         || user_id == delete_request.id
     {
         connection
             .database
             .lock()
             .unwrap()
-            .delete_user(&delete_request.id)
-            .await;
+            .delete_user(&delete_request.id);
     } else {
         let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
         connection
@@ -160,8 +157,7 @@ pub async fn modify_user(connection: &mut UserConnection, modify_request: Modify
         .database
         .lock()
         .unwrap()
-        .query_user_by_id(&modify_request.id)
-        .await;
+        .query_user_by_id(&modify_request.id);
 
     if user_struct_result.is_none() {
         return;
@@ -173,8 +169,7 @@ pub async fn modify_user(connection: &mut UserConnection, modify_request: Modify
         .database
         .lock()
         .unwrap()
-        .is_administrator(&user_id)
-        .await;
+        .is_administrator(&user_id);
 
     if admin || user_id == modify_request.id
     {
@@ -205,7 +200,7 @@ pub async fn modify_user(connection: &mut UserConnection, modify_request: Modify
             email: modify_request.email.clone().unwrap_or(user_struct.email),
             password: hashed_password,
             role: modify_request.role.clone().unwrap_or(user_struct.role),
-        }).await;
+        });
     } else {
         let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
         connection

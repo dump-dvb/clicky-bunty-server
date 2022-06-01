@@ -20,7 +20,7 @@ tungstenite = "0.17"
 postgres = "0.19"
 
 # async
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "1.18", features = ["full"] }
 
 # password hashing 
 pbkdf2 = "0.10"

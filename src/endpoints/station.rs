@@ -46,8 +46,7 @@ async fn owns_station(connection: &mut UserConnection, station_id: &u32) -> bool
         .database
         .lock()
         .unwrap()
-        .query_station(&station_id)
-        .await;
+        .query_station(&station_id);
 
     if result_station.is_none() {
         return false;
@@ -64,7 +63,6 @@ pub async fn create_station(connection: &mut UserConnection, request: CreateStat
         .lock()
         .unwrap()
         .check_region_exists(request.region)
-        .await
         && connection.user.is_some()
     {
         let random_token: String = rand::thread_rng()
@@ -88,8 +86,7 @@ pub async fn create_station(connection: &mut UserConnection, request: CreateStat
             .database
             .lock()
             .unwrap()
-            .create_station(&station)
-            .await;
+            .create_station(&station);
 
         let serialized = serde_json::to_string(&ServiceResponse { success: result }).unwrap();
         connection
@@ -108,8 +105,7 @@ pub async fn list_stations(connection: &mut UserConnection, request: ListStation
         .database
         .lock()
         .unwrap()
-        .list_stations(request.owner, request.region)
-        .await;
+        .list_stations(request.owner, request.region);
 
     let serialized = serde_json::to_string(&data).unwrap();
     connection
@@ -124,8 +120,7 @@ pub async fn delete_station(connection: &mut UserConnection, request: DeleteStat
             .database
             .lock()
             .unwrap()
-            .delete_station(&request.id)
-            .await;
+            .delete_station(&request.id);
     }
     let serialized = serde_json::to_string(&ServiceResponse { success: result_query }).unwrap();
     connection
@@ -138,8 +133,7 @@ pub async fn modify_station(connection: &mut UserConnection, request: ModifyStat
         .database
         .lock()
         .unwrap()
-        .query_station(&request.id)
-        .await;
+        .query_station(&request.id);
 
     if result_station.as_ref().is_none() {
         return;
@@ -161,8 +155,7 @@ pub async fn modify_station(connection: &mut UserConnection, request: ModifyStat
                 region: request.region.unwrap_or(station.region),
                 token: None,
                 owner: station.owner,
-            })
-            .await;
+            });
     }
 }
 
@@ -172,8 +165,7 @@ pub async fn approve_station(connection: &mut UserConnection, request: ApproveSt
             .database
             .lock()
             .unwrap()
-            .set_approved(&request.id, request.approved)
-            .await;
+            .set_approved(&request.id, request.approved);
     }
 }
 
@@ -189,7 +181,6 @@ pub async fn generate_token(connection: &mut UserConnection, request: GenerateTo
             .database
             .lock()
             .unwrap()
-            .set_token(&request.id, &random_token)
-            .await;
+            .set_token(&request.id, &random_token);
     }
 }
