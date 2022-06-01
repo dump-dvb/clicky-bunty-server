@@ -114,6 +114,7 @@ fn listen(mut connection: UserConnection) {
     loop {
         match connection.socket.read_message() {
             Ok(message) => {
+                println!("Received Message {:?} !", &message);
                 process_message(&mut connection, &message);
             }
             _ => {}
@@ -137,6 +138,7 @@ fn main() {
         thread::spawn( move || {
             match accept(stream.unwrap()) {
                 Ok(websocket) => {
+                    println!("New Connection!");
                     listen(UserConnection {
                         database: current_run_clone,
                         socket: websocket,
