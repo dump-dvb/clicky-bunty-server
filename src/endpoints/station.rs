@@ -41,7 +41,7 @@ pub struct GenerateToken {
     pub id: u32,
 }
 
-async fn owns_station(connection: &mut UserConnection, station_id: &u32) -> bool {
+fn owns_station(connection: &mut UserConnection, station_id: &u32) -> bool {
     let result_station = connection
         .database
         .lock()
@@ -57,7 +57,7 @@ async fn owns_station(connection: &mut UserConnection, station_id: &u32) -> bool
     station.owner == connection.user.as_ref().unwrap().id
 }
 
-pub async fn create_station(connection: &mut UserConnection, request: CreateStationRequest) {
+pub fn create_station(connection: &mut UserConnection, request: CreateStationRequest) {
     if connection
         .database
         .lock()
@@ -100,7 +100,7 @@ pub async fn create_station(connection: &mut UserConnection, request: CreateStat
     }
 }
 
-pub async fn list_stations(connection: &mut UserConnection, request: ListStationsRequest) {
+pub fn list_stations(connection: &mut UserConnection, request: ListStationsRequest) {
     let data = connection
         .database
         .lock()
@@ -113,9 +113,9 @@ pub async fn list_stations(connection: &mut UserConnection, request: ListStation
         .write_message(tungstenite::Message::Text(serialized)).unwrap();
 }
 
-pub async fn delete_station(connection: &mut UserConnection, request: DeleteStation) {
+pub fn delete_station(connection: &mut UserConnection, request: DeleteStation) {
     let mut result_query = false;
-    if connection.user.as_ref().unwrap().is_admin() || owns_station(connection, &request.id).await {
+    if connection.user.as_ref().unwrap().is_admin() || owns_station(connection, &request.id){
         result_query = connection
             .database
             .lock()
@@ -128,7 +128,7 @@ pub async fn delete_station(connection: &mut UserConnection, request: DeleteStat
         .write_message(tungstenite::Message::Text(serialized)).unwrap();
 }
 
-pub async fn modify_station(connection: &mut UserConnection, request: ModifyStation) {
+pub fn modify_station(connection: &mut UserConnection, request: ModifyStation) {
     let result_station = connection
         .database
         .lock()
@@ -141,7 +141,7 @@ pub async fn modify_station(connection: &mut UserConnection, request: ModifyStat
 
     let station = result_station.unwrap();
 
-    if connection.user.as_ref().unwrap().is_admin() || owns_station(connection, &request.id).await {
+    if connection.user.as_ref().unwrap().is_admin() || owns_station(connection, &request.id){
         connection
             .database
             .lock()
@@ -159,7 +159,7 @@ pub async fn modify_station(connection: &mut UserConnection, request: ModifyStat
     }
 }
 
-pub async fn approve_station(connection: &mut UserConnection, request: ApproveStation) {
+pub fn approve_station(connection: &mut UserConnection, request: ApproveStation) {
     if connection.user.as_ref().unwrap().is_admin() {
         connection
             .database
@@ -169,8 +169,8 @@ pub async fn approve_station(connection: &mut UserConnection, request: ApproveSt
     }
 }
 
-pub async fn generate_token(connection: &mut UserConnection, request: GenerateToken) {
-    if connection.user.as_ref().unwrap().is_admin() || owns_station(connection, &request.id).await {
+pub fn generate_token(connection: &mut UserConnection, request: GenerateToken) {
+    if connection.user.as_ref().unwrap().is_admin() || owns_station(connection, &request.id){
         let random_token: String = rand::thread_rng()
             .sample_iter(&Alphanumeric)
             .take(32)

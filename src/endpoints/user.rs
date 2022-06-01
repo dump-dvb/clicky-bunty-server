@@ -55,7 +55,7 @@ fn hash_password(password: &String) -> String {
     PasswordHash::new(&password_hash).unwrap().to_string()
 }
 
-pub async fn create_user(connection: &mut UserConnection, request: RegisterUserRequest) {
+pub fn create_user(connection: &mut UserConnection, request: RegisterUserRequest) {
     let email_regex = Regex::new(
         r"^([a-z0-9_+]([a-z0-9_+.]*[a-z0-9_+])?)@([a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,6})",
     )
@@ -89,7 +89,7 @@ pub async fn create_user(connection: &mut UserConnection, request: RegisterUserR
         .write_message(tungstenite::Message::Text(serialized)).unwrap();
 }
 
-pub async fn login(connection: &mut UserConnection, request: LoginRequest) {
+pub fn login(connection: &mut UserConnection, request: LoginRequest) {
     match connection
         .database
         .lock()
@@ -119,7 +119,7 @@ pub async fn login(connection: &mut UserConnection, request: LoginRequest) {
         .write_message(tungstenite::Message::Text(serialized)).unwrap();
 }
 
-pub async fn get_session(connection: &mut UserConnection) {
+pub fn get_session(connection: &mut UserConnection) {
     let serialized = serde_json::to_string(&RequestUserSession {
         id: connection.user.as_ref().unwrap().id.to_string(),
     })
@@ -129,7 +129,7 @@ pub async fn get_session(connection: &mut UserConnection) {
         .write_message(tungstenite::Message::Text(serialized)).unwrap();
 }
 
-pub async fn delete_user(connection: &mut UserConnection, delete_request: DeleteUserRequest) {
+pub fn delete_user(connection: &mut UserConnection, delete_request: DeleteUserRequest) {
     let user_id = connection.user.as_ref().unwrap().id.to_string();
 
     if connection
@@ -152,7 +152,7 @@ pub async fn delete_user(connection: &mut UserConnection, delete_request: Delete
     }
 }
 
-pub async fn modify_user(connection: &mut UserConnection, modify_request: ModifyUserRequest) {
+pub fn modify_user(connection: &mut UserConnection, modify_request: ModifyUserRequest) {
     let user_struct_result = connection
         .database
         .lock()

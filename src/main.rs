@@ -16,6 +16,7 @@ use serde_json;
 use std::sync::{Arc, Mutex};
 use tokio;
 use tungstenite::accept;
+use std::thread;
 
 use std::net::TcpListener;
 
@@ -39,7 +40,7 @@ pub struct UserConnection {
     user: Option<User>,
 }
 
-async fn process_message(
+fn process_message(
     connection: &mut UserConnection,
     message: &tungstenite::protocol::Message,
 ) {
@@ -61,67 +62,67 @@ async fn process_message(
 
     match (command.as_str(), body, authenticated) {
         ("user/register", Body::Register(parsed_struct), false) => {
-            create_user(connection, parsed_struct).await;
+            create_user(connection, parsed_struct);
         }
         ("user/login", Body::Login(parsed_struct), false) => {
-            login(connection, parsed_struct).await;
+            login(connection, parsed_struct);
         }
         ("user/session", Body::Empty, true) => {
-            get_session(connection).await;
+            get_session(connection);
         }
         ("user/delete", Body::DeleteUser(parsed_struct), true) => {
-            delete_user(connection, parsed_struct).await;
+            delete_user(connection, parsed_struct);
         }
         ("user/modify", Body::UserModify(parsed_struct), true) => {
-            modify_user(connection, parsed_struct).await;
+            modify_user(connection, parsed_struct);
         }
         ("station/create", Body::CreateStation(parsed_struct), true) => {
-            create_station(connection, parsed_struct).await;
+            create_station(connection, parsed_struct);
         }
         ("station/list", Body::ListStations(parsed_struct), _) => {
-            list_stations(connection, parsed_struct).await;
+            list_stations(connection, parsed_struct);
         }
         ("station/delete", Body::DeleteStation(parsed_struct), true) => {
-            delete_station(connection, parsed_struct).await;
+            delete_station(connection, parsed_struct);
         }
         ("station/modify", Body::ModifyStation(parsed_struct), true) => {
-            modify_station(connection, parsed_struct).await;
+            modify_station(connection, parsed_struct);
         }
         ("station/approve", Body::ApproveStation(parsed_struct), true) => {
-            approve_station(connection, parsed_struct).await;
+            approve_station(connection, parsed_struct);
         }
         ("station/generate_token", Body::GenerateToken(parsed_struct), true) => {
-            generate_token(connection, parsed_struct).await;
+            generate_token(connection, parsed_struct);
         }
         ("region/create", Body::CreateRegion(parsed_struct), true) => {
-            create_region(connection, parsed_struct).await;
+            create_region(connection, parsed_struct);
         }
         ("region/delete", Body::DeleteRegion(parsed_struct), true) => {
-            delete_region(connection, parsed_struct).await;
+            delete_region(connection, parsed_struct);
         }
         ("region/modify", Body::ModifyRegion(parsed_struct), true) => {
-            modify_region(connection, parsed_struct).await;
+            modify_region(connection, parsed_struct);
         }
         ("region/list", Body::Empty, _) => {
-            list_regions(connection).await;
+            list_regions(connection);
         }
         (&_, _, _) => {}
     }
 }
 
-async fn listen(mut connection: UserConnection) {
+fn listen(mut connection: UserConnection) {
     loop {
         match connection.socket.read_message() {
             Ok(message) => {
-                process_message(&mut connection, &message).await;
+                process_message(&mut connection, &message);
             }
             _ => {}
         }
     }
 }
 
-#[tokio::main]
-async fn main() {
+//#[tokio::main]
+fn main() {
     let args = Args::parse();
 
     let host = args.host.as_str();
@@ -133,14 +134,14 @@ async fn main() {
     let server = TcpListener::bind(format!("{}:{}", host, port)).unwrap();
     for stream in server.incoming() {
         let current_run_clone = current_run.clone();
-        tokio::spawn( async move {
+        thread::spawn( move || {
             match accept(stream.unwrap()) {
                 Ok(websocket) => {
                     listen(UserConnection {
                         database: current_run_clone,
                         socket: websocket,
                         user: None,
-                    }).await;
+                    });
                 }
                 _ => {}
             };

@@ -101,7 +101,7 @@ impl Serialize for Station {
 }
 
 impl DataBaseConnection {
-    pub  fn new() -> DataBaseConnection {
+    pub fn new() -> DataBaseConnection {
         let default_postgres_host = String::from("localhost:5433");
         let default_postgres_port = String::from("5432");
 

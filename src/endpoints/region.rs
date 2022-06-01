@@ -36,7 +36,7 @@ fn write_error(connection: &mut UserConnection) {
 }
 
 
-pub async fn create_region(connection: &mut UserConnection, request: RegionRequest) {
+pub fn create_region(connection: &mut UserConnection, request: RegionRequest) {
     if !admin(connection) {
         write_error(connection);
         return;
@@ -59,7 +59,7 @@ pub async fn create_region(connection: &mut UserConnection, request: RegionReque
         .write_message(tungstenite::Message::Text(serialized)).unwrap();
 }
 
-pub async fn modify_region(connection: &mut UserConnection, request: ModifyRegionRequest) {
+pub fn modify_region(connection: &mut UserConnection, request: ModifyRegionRequest) {
     if !admin(connection) {
         write_error(connection);
         return;
@@ -101,7 +101,7 @@ pub async fn modify_region(connection: &mut UserConnection, request: ModifyRegio
         .write_message(tungstenite::Message::Text(serialized)).unwrap();
 }
 
-pub async fn delete_region(connection: &mut UserConnection, request: DeleteRegion) {
+pub fn delete_region(connection: &mut UserConnection, request: DeleteRegion) {
     if !admin(connection) {
         write_error(connection);
         return;
@@ -119,7 +119,7 @@ pub async fn delete_region(connection: &mut UserConnection, request: DeleteRegio
         .write_message(tungstenite::Message::Text(serialized)).unwrap();
 }
 
-pub async fn list_regions(connection: &mut UserConnection) {
+pub fn list_regions(connection: &mut UserConnection) {
     let data = connection.database.lock().unwrap().list_regions();
 
     let serialized = serde_json::to_string(&data).unwrap();
