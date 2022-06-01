@@ -17,7 +17,7 @@ create_user = {
 raw_config = json.dumps(create_user);
 
 async def hello(uri):
-    async with connect(uri, ssl=None) as websocket:
+    async with connect(uri) as websocket:
         print("Request!")
         await websocket.send(raw_config)
         print(await websocket.recv())

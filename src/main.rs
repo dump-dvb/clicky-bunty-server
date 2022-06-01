@@ -34,6 +34,11 @@ struct MessageTemplate {
     body: Body,
 }
 
+#[derive(Serialize)]
+pub struct ServiceResponse {
+    success: bool,
+}
+
 pub struct UserConnection {
     database: Arc<Mutex<DataBaseConnection>>,
     socket: tungstenite::protocol::WebSocket<std::net::TcpStream>,
@@ -49,7 +54,22 @@ fn process_message(
 
     match message {
         tungstenite::protocol::Message::Text(text) => {
-            let parsed: MessageTemplate = serde_json::from_str(&text).unwrap(); //TODO:
+            let parsed: MessageTemplate;
+            match serde_json::from_str(&text) {
+                Ok(data) => {
+                    parsed = data;
+                } 
+                _ => {
+                    println!("user send incorrect message");
+                    let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
+                    connection
+                        .socket
+                        .write_message(tungstenite::Message::Text(serialized)).unwrap();
+
+                    return;
+
+                }
+            }
             command = parsed.operation;
             body = parsed.body;
         }
