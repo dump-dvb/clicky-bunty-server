@@ -99,6 +99,7 @@ pub fn login(connection: &mut UserConnection, request: LoginRequest) {
         .query_user(&request.name)
     {
         Some(user) => {
+            println!("Found unter with this name !");
             let password_hash = PasswordHash::parse(&user.password, Encoding::B64).unwrap();
             match Pbkdf2.verify_password(request.password.as_bytes(), &password_hash) {
                 Ok(_) => {
@@ -110,10 +111,14 @@ pub fn login(connection: &mut UserConnection, request: LoginRequest) {
                         .write_message(tungstenite::Message::Text(serialized)).unwrap();
                     return;
                 }
-                _ => {}
+                _ => {
+                    println!("Password does not match");
+                }
             }
         }
-        _ => {}
+        _ => {
+            println!("No user found ! {}", &request.name);
+        }
     }
     let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
     connection

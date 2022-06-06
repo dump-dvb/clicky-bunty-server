@@ -51,7 +51,7 @@ async def hello(uri):
         print(await websocket.recv())
         await websocket.send(json.dumps(login_admin))
         print(await websocket.recv())
-        await websocket.send(jsom.dumps(list_users))
+        await websocket.send(json.dumps(list_users))
         print(await websocket.recv())
 
 asyncio.run(hello("wss://management-backend.staging.dvb.solutions"))
