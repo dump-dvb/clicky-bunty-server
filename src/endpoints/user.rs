@@ -37,14 +37,8 @@ pub struct ModifyUserRequest {
 }
 
 #[derive(Deserialize, Serialize)]
-#[serde(tag = "DeleteUserRequest")]
-pub struct DeleteUserRequest {
-    pub id: String,
-}
-
-#[derive(Deserialize, Serialize)]
-#[serde(tag = "RequestUserSession")]
-pub struct RequestUserSession {
+#[serde(tag = "UserIdentifierRequest")]
+pub struct UserIdentifierRequest {
     pub id: String,
 }
 
@@ -125,7 +119,7 @@ pub fn login(connection: &mut UserConnection, request: LoginRequest) {
 }
 
 pub fn get_session(connection: &mut UserConnection) {
-    let serialized = serde_json::to_string(&RequestUserSession {
+    let serialized = serde_json::to_string(&UserIdentifierRequest {
         id: connection.user.as_ref().unwrap().id.to_string(),
     })
     .unwrap();
@@ -134,7 +128,7 @@ pub fn get_session(connection: &mut UserConnection) {
         .write_message(tungstenite::Message::Text(serialized)).unwrap();
 }
 
-pub fn delete_user(connection: &mut UserConnection, delete_request: DeleteUserRequest) {
+pub fn delete_user(connection: &mut UserConnection, delete_request: UserIdentifierRequest) {
     let user_id = connection.user.as_ref().unwrap().id.to_string();
 
     if connection

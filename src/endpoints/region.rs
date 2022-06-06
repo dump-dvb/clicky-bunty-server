@@ -1,8 +1,8 @@
 use super::{Region, ServiceResponse, UserConnection};
 use serde::{Deserialize, Serialize};
+use super::IdentifierRequest;
 
 #[derive(Serialize, Deserialize)]
-#[serde(tag = "RegionRequest")]
 pub struct RegionRequest {
     pub name: String,
     pub transport_company: String,
@@ -11,13 +11,6 @@ pub struct RegionRequest {
 }
 
 #[derive(Serialize, Deserialize)]
-#[serde(tag = "DeleteRegion")]
-pub struct DeleteRegion {
-    id: u32,
-}
-
-#[derive(Serialize, Deserialize)]
-#[serde(tag = "ModifyRegionRequest")]
 pub struct ModifyRegionRequest {
     id: u32,
     pub name: Option<String>,
@@ -104,7 +97,7 @@ pub fn modify_region(connection: &mut UserConnection, request: ModifyRegionReque
         .write_message(tungstenite::Message::Text(serialized)).unwrap();
 }
 
-pub fn delete_region(connection: &mut UserConnection, request: DeleteRegion) {
+pub fn delete_region(connection: &mut UserConnection, request: IdentifierRequest) {
     if !admin(connection) {
         write_error(connection);
         return;

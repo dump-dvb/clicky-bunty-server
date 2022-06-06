@@ -1,6 +1,7 @@
 #!/usr/bin/env nix-shell
 #!nix-shell --pure -i python3.9 -p "python39Packes.ghcWithPackages (pkgs: [ pkgs.turtle ])"
 
+#"{\"operation\": \"user/register\", \"tag\": \"Register\", \"body\": {\"tag\": \"Register\", \"name\":\"test\", \"password\": \"test\", \"email\": \"test@test.com\"}}"
 import asyncio
 import json
 from websockets import connect
@@ -8,7 +9,6 @@ from websockets import connect
 create_user = {
     "operation": "user/register",
     "body": {
-        "tag": "RegisterUserRequest",
         "name": "test",
         "password": "test",
         "email": "test@test.com"

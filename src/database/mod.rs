@@ -14,6 +14,7 @@ pub enum Role {
     Administrator = 0,
 }
 
+
 impl Role {
     pub fn from(role: u32) -> Role {
         match role {

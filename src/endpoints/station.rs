@@ -1,9 +1,8 @@
-use super::{ServiceResponse, Station, UserConnection};
+use super::{ServiceResponse, Station, UserConnection, IdentifierRequest};
 use rand::{distributions::Alphanumeric, Rng};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
-#[serde(tag = "CreateStationRequest")]
 pub struct CreateStationRequest {
     pub name: String,
     pub lat: f64,
@@ -12,20 +11,12 @@ pub struct CreateStationRequest {
 }
 
 #[derive(Deserialize, Serialize)]
-#[serde(tag = "ListStationsRequest")]
 pub struct ListStationsRequest {
     pub owner: Option<String>,
     pub region: Option<u32>,
 }
 
 #[derive(Deserialize, Serialize)]
-#[serde(tag = "DeleteStation")]
-pub struct DeleteStation {
-    pub id: u32,
-}
-
-#[derive(Deserialize, Serialize)]
-#[serde(tag = "ModifyStation")]
 pub struct ModifyStation {
     pub id: u32,
     pub name: Option<String>,
@@ -35,16 +26,9 @@ pub struct ModifyStation {
 }
 
 #[derive(Deserialize, Serialize)]
-#[serde(tag = "ApproveStation")]
 pub struct ApproveStation {
     pub id: u32,
     pub approved: bool,
-}
-
-#[derive(Deserialize, Serialize)]
-#[serde(tag = "GenerateToken")]
-pub struct GenerateToken {
-    pub id: u32,
 }
 
 fn owns_station(connection: &mut UserConnection, station_id: &u32) -> bool {
@@ -119,7 +103,7 @@ pub fn list_stations(connection: &mut UserConnection, request: ListStationsReque
         .write_message(tungstenite::Message::Text(serialized)).unwrap();
 }
 
-pub fn delete_station(connection: &mut UserConnection, request: DeleteStation) {
+pub fn delete_station(connection: &mut UserConnection, request: IdentifierRequest) {
     let mut result_query = false;
     if connection.user.as_ref().unwrap().is_admin() || owns_station(connection, &request.id){
         result_query = connection
@@ -175,7 +159,7 @@ pub fn approve_station(connection: &mut UserConnection, request: ApproveStation)
     }
 }
 
-pub fn generate_token(connection: &mut UserConnection, request: GenerateToken) {
+pub fn generate_token(connection: &mut UserConnection, request: IdentifierRequest) {
     if connection.user.as_ref().unwrap().is_admin() || owns_station(connection, &request.id){
         let random_token: String = rand::thread_rng()
             .sample_iter(&Alphanumeric)

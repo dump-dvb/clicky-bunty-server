@@ -90,7 +90,7 @@ fn process_message(
         ("user/session", Body::Empty, true) => {
             get_session(connection);
         }
-        ("user/delete", Body::DeleteUser(parsed_struct), true) => {
+        ("user/delete", Body::UserIdentifier(parsed_struct), true) => {
             delete_user(connection, parsed_struct);
         }
         ("user/modify", Body::UserModify(parsed_struct), true) => {
@@ -102,7 +102,7 @@ fn process_message(
         ("station/list", Body::ListStations(parsed_struct), _) => {
             list_stations(connection, parsed_struct);
         }
-        ("station/delete", Body::DeleteStation(parsed_struct), true) => {
+        ("station/delete", Body::Identifier(parsed_struct), true) => {
             delete_station(connection, parsed_struct);
         }
         ("station/modify", Body::ModifyStation(parsed_struct), true) => {
@@ -111,13 +111,13 @@ fn process_message(
         ("station/approve", Body::ApproveStation(parsed_struct), true) => {
             approve_station(connection, parsed_struct);
         }
-        ("station/generate_token", Body::GenerateToken(parsed_struct), true) => {
+        ("station/generate_token", Body::Identifier(parsed_struct), true) => {
             generate_token(connection, parsed_struct);
         }
         ("region/create", Body::CreateRegion(parsed_struct), true) => {
             create_region(connection, parsed_struct);
         }
-        ("region/delete", Body::DeleteRegion(parsed_struct), true) => {
+        ("region/delete", Body::Identifier(parsed_struct), true) => {
             delete_region(connection, parsed_struct);
         }
         ("region/modify", Body::ModifyRegion(parsed_struct), true) => {
