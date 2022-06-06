@@ -17,7 +17,7 @@ serde_json = "1.0"
 tungstenite = "0.17"
 
 # database
-postgres = "0.19"
+postgres = { version="0.19", features = ["with-uuid-1"]}
 
 # async
 tokio = { version = "1.18", features = ["full"] }
@@ -30,6 +30,6 @@ rand_core = { version = "0.6", features = ["std"] }
 rand = "0.8"
 
 
-uuid = { version = "0.4", features = ["serde", "v4"] }
+uuid = { version = "1.1", features = ["serde", "v4"] }
 regex = "*"
 

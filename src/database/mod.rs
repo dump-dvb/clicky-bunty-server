@@ -1,8 +1,6 @@
 extern crate postgres;
 
-use postgres::{Client, NoTls, config::SslMode, 
-    types::Type //{UUID, TEXT, INT8, INT4, VARCHAR, BOOL, FLOAT8}
-};
+use postgres::{Client, NoTls, config::SslMode };
 use serde::ser::{SerializeStruct, Serializer};
 use serde::{Deserialize, Serialize};
 use std::clone::Clone;
@@ -287,7 +285,7 @@ impl DataBaseConnection {
         if owner.is_some() && region.is_some() {
             results = self
                 .postgres
-                .query(&query, &[&owner.unwrap().to_string(), &region.unwrap()])
+                .query(&query, &[&owner.unwrap(), &region.unwrap()])
                 .unwrap();
         } else if owner.is_some() {
             results = self
@@ -343,7 +341,7 @@ impl DataBaseConnection {
             .execute(
                 "INSERT INTO users (id, name, email, password, role) VALUES ($1, $2, $3, $4, $5)",
                 &[
-                    &user.id.to_string(),
+                    &user.id,
                     &user.name,
                     &user.email,
                     &user.password,
@@ -387,7 +385,7 @@ impl DataBaseConnection {
                 &station.lat,
                 &station.lon,
                 &station.region,
-                &station.owner.to_string(),
+                &station.owner,
                 &station.approved
             ],
         ) {
@@ -416,9 +414,9 @@ impl DataBaseConnection {
         }
     }
 
-    pub  fn get_owner_from_station(&mut self, region_id: &u32) -> Option<String> {
+    pub  fn get_owner_from_station(&mut self, region_id: &u32) -> Option<Uuid> {
         match self.query_station(region_id){
-            Some(region) => Some(region.owner.to_string()),
+            Some(region) => Some(region.owner),
             _ => None,
         }
     }

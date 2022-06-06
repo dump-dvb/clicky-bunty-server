@@ -14,7 +14,6 @@ use clap::Parser;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::sync::{Arc, Mutex};
-use tokio;
 use tungstenite::accept;
 use std::thread;
 
