@@ -59,8 +59,8 @@ fn process_message(
                 Ok(data) => {
                     parsed = data;
                 } 
-                _ => {
-                    println!("user send incorrect message");
+                Err(e) => {
+                    println!("user send incorrect message {:?}", e);
                     let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
                     connection
                         .socket
