@@ -334,7 +334,7 @@ impl DataBaseConnection {
     }
 
     pub  fn create_user(&mut self, user: &User) -> bool {
-        self.postgres
+        match self.postgres
             .execute(
                 "INSERT INTO users (id, name, email, password, role) VALUES ($1, $2, $3, $4, $5)",
                 &[
@@ -344,12 +344,17 @@ impl DataBaseConnection {
                     &user.password,
                     &user.role.as_int(),
                 ],
-            )
-            .is_ok()
+            ) {
+                Ok(_) => { true }
+                Err(e) => {
+                    println!("Error: {}", e);
+                    false
+                }
+        }
     }
 
     pub  fn create_region(&mut self, user: &Region) -> bool {
-        self.postgres
+        match self.postgres
             .execute(
                 "INSERT INTO regions (id, name, transport_company, frequency, protocol) VALUES ($1, $2, $3, $4, $5)",
                 &[
@@ -359,12 +364,17 @@ impl DataBaseConnection {
                     &(user.frequency as i64),
                     &user.protocol,
                 ],
-            )
-            .is_ok()
+            ) {
+            Ok(_) => { true }
+            Err(e) => {
+                println!("Error: {}", e);
+                false
+            }
+        }
     }
 
     pub  fn create_station(&mut self, station: &Station) -> bool {
-        self.postgres.execute(
+        match self.postgres.execute(
             "INSERT INTO users (token, name, lat, lon, region, owner, approved) VALUES ($1, $2, $3, $4, $5, $6, $7)",
             &[
                 &station.token,
@@ -375,7 +385,13 @@ impl DataBaseConnection {
                 &station.owner.to_string(),
                 &station.approved
             ],
-        ).is_ok()
+        ) {
+            Ok(_) => { true }
+            Err(e) => {
+                println!("Error: {}", e);
+                false
+            }
+        }
     }
 
     pub  fn first_user(&mut self) -> bool {
