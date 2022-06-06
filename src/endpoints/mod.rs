@@ -28,6 +28,7 @@ pub struct IdentifierRequest {
 }
 
 #[derive(Deserialize, Serialize)]
+#[serde(untagged)]
 pub enum Body {
     Empty,
     Register(RegisterUserRequest),
