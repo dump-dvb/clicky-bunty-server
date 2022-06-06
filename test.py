@@ -8,6 +8,7 @@ from websockets import connect
 create_user = {
     "operation": "user/register",
     "body": {
+        "tag": "RegisterUserRequest",
         "name": "test",
         "password": "test",
         "email": "test@test.com"

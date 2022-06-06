@@ -2,6 +2,7 @@ use super::{Region, ServiceResponse, UserConnection};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
+#[serde(tag = "RegionRequest")]
 pub struct RegionRequest {
     pub name: String,
     pub transport_company: String,
@@ -10,11 +11,13 @@ pub struct RegionRequest {
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(tag = "DeleteRegion")]
 pub struct DeleteRegion {
     id: u32,
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(tag = "ModifyRegionRequest")]
 pub struct ModifyRegionRequest {
     id: u32,
     pub name: Option<String>,

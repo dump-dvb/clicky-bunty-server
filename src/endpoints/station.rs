@@ -3,6 +3,7 @@ use rand::{distributions::Alphanumeric, Rng};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
+#[serde(tag = "CreateStationRequest")]
 pub struct CreateStationRequest {
     pub name: String,
     pub lat: f64,
@@ -11,17 +12,20 @@ pub struct CreateStationRequest {
 }
 
 #[derive(Deserialize, Serialize)]
+#[serde(tag = "ListStationsRequest")]
 pub struct ListStationsRequest {
     pub owner: Option<String>,
     pub region: Option<u32>,
 }
 
 #[derive(Deserialize, Serialize)]
+#[serde(tag = "DeleteStation")]
 pub struct DeleteStation {
     pub id: u32,
 }
 
 #[derive(Deserialize, Serialize)]
+#[serde(tag = "ModifyStation")]
 pub struct ModifyStation {
     pub id: u32,
     pub name: Option<String>,
@@ -31,12 +35,14 @@ pub struct ModifyStation {
 }
 
 #[derive(Deserialize, Serialize)]
+#[serde(tag = "ApproveStation")]
 pub struct ApproveStation {
     pub id: u32,
     pub approved: bool,
 }
 
 #[derive(Deserialize, Serialize)]
+#[serde(tag = "GenerateToken")]
 pub struct GenerateToken {
     pub id: u32,
 }
