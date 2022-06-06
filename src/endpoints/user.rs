@@ -51,6 +51,13 @@ fn hash_password(password: &String) -> String {
 }
 
 pub fn create_user(connection: &mut UserConnection, request: RegisterUserRequest) {
+    if connection.database.lock().unwrap().check_user_exists(&request.name) {
+        let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
+        connection
+            .socket
+            .write_message(tungstenite::Message::Text(serialized)).unwrap();
+    }
+
     let email_regex = Regex::new(
         r"^([a-z0-9_+]([a-z0-9_+.]*[a-z0-9_+])?)@([a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,6})",
     )

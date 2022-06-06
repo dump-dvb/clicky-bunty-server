@@ -5,8 +5,13 @@
 import asyncio
 import json
 from websockets import connect
+import random, string
 
-create_user = {
+def randomword(length):
+   letters = string.ascii_lowercase
+   return ''.join(random.choice(letters) for i in range(length))
+
+create_admin_user = {
     "operation": "user/register",
     "body": {
         "name": "test",
@@ -15,12 +20,38 @@ create_user = {
     }
 }
 
-raw_config = json.dumps(create_user);
+login_admin = {
+    "operation": "user/login",
+    "body": {
+        "name": "test",
+        "password": "test"
+    }
+}
+
+create_regular_user = {
+    "operation": "user/register",
+    "body": {
+        "name": randomword(12),
+        "password": randomword(12),
+        "email": "test@test.com"
+    }
+}
+
+list_users = {
+    "operation": "user/list"
+}
+
 
 async def hello(uri):
     async with connect(uri) as websocket:
         print("Request!")
-        await websocket.send(raw_config)
+        await websocket.send(json.dumps(create_admin_user))
+        print(await websocket.recv())
+        await websocket.send(json.dumps(create_regular_user))
+        print(await websocket.recv())
+        await websocket.send(json.dumps(login_admin))
+        print(await websocket.recv())
+        await websocket.send(jsom.dumps(list_users))
         print(await websocket.recv())
 
 asyncio.run(hello("wss://management-backend.staging.dvb.solutions"))

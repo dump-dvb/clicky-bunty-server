@@ -247,16 +247,25 @@ impl DataBaseConnection {
             _ => None,
         }
     }
-    pub  fn check_region_exists(&mut self, id: u32) -> bool {
+    pub fn check_region_exists(&mut self, id: u32) -> bool {
         match self
             .postgres
-            .query_one("SELECT 1 FROM regions WHERE id = $1", &[&id])
+            .query_one("SELECT 1 FROM regions WHERE id=$1", &[&id])
         {
             Ok(_) => true,
             _ => false,
         }
     }
 
+    pub fn check_user_exists(&mut self, name: &String) -> bool {
+        match self
+            .postgres
+            .query_one("SELECT 1 FROM users WHERE name=$1", &[name])
+        {
+            Ok(_) => true,
+            _ => false,
+        }
+    }
     pub  fn list_stations(
         &mut self,
         owner: Option<String>,
