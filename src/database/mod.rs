@@ -1,6 +1,8 @@
 extern crate postgres;
 
-use postgres::{Client, NoTls, config::SslMode};
+use postgres::{Client, NoTls, config::SslMode, 
+    types::Type //{UUID, TEXT, INT8, INT4, VARCHAR, BOOL, FLOAT8}
+};
 use serde::ser::{SerializeStruct, Serializer};
 use serde::{Deserialize, Serialize};
 use std::clone::Clone;
@@ -8,7 +10,7 @@ use std::cmp::PartialEq;
 use std::env;
 use uuid::Uuid;
 
-#[derive(Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, PartialEq, Debug)]
 pub enum Role {
     User = 6,
     Administrator = 0,
@@ -31,6 +33,8 @@ impl Role {
     }
 }
 
+
+#[derive(Debug)]
 pub struct User {
     pub id: Uuid,
     pub name: String,
@@ -45,7 +49,7 @@ impl User {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct Region {
     pub id: u32,
     pub name: String,
@@ -334,6 +338,7 @@ impl DataBaseConnection {
     }
 
     pub  fn create_user(&mut self, user: &User) -> bool {
+        println!("create user: {:?}", &user);
         match self.postgres
             .execute(
                 "INSERT INTO users (id, name, email, password, role) VALUES ($1, $2, $3, $4, $5)",
@@ -353,16 +358,16 @@ impl DataBaseConnection {
         }
     }
 
-    pub  fn create_region(&mut self, user: &Region) -> bool {
+    pub  fn create_region(&mut self, region: &Region) -> bool {
         match self.postgres
             .execute(
                 "INSERT INTO regions (id, name, transport_company, frequency, protocol) VALUES ($1, $2, $3, $4, $5)",
                 &[
-                    &user.id.to_string(),
-                    &user.name,
-                    &user.transport_company,
-                    &(user.frequency as i64),
-                    &user.protocol,
+                    &region.id,
+                    &region.name,
+                    &region.transport_company,
+                    &(region.frequency as i64),
+                    &region.protocol,
                 ],
             ) {
             Ok(_) => { true }
