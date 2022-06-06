@@ -345,7 +345,7 @@ impl DataBaseConnection {
                     &user.name,
                     &user.email,
                     &user.password,
-                    &user.role.as_int(),
+                    &(user.role.as_int() as i32),
                 ],
             ) {
                 Ok(_) => { true }
@@ -361,7 +361,7 @@ impl DataBaseConnection {
             .execute(
                 "INSERT INTO regions (id, name, transport_company, frequency, protocol) VALUES ($1, $2, $3, $4, $5)",
                 &[
-                    &region.id,
+                    &(region.id as i32),
                     &region.name,
                     &region.transport_company,
                     &(region.frequency as i64),
@@ -384,7 +384,7 @@ impl DataBaseConnection {
                 &station.name,
                 &station.lat,
                 &station.lon,
-                &station.region,
+                &(station.region as i32),
                 &station.owner,
                 &station.approved
             ],
