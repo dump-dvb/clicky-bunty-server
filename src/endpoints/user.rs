@@ -12,7 +12,6 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Deserialize, Serialize)]
-#[serde(tag = "RegisterUserRequest")]
 pub struct RegisterUserRequest {
     pub name: String,
     pub email: String,
@@ -20,14 +19,12 @@ pub struct RegisterUserRequest {
 }
 
 #[derive(Deserialize, Serialize)]
-#[serde(tag = "LoginRequest")]
 pub struct LoginRequest {
     pub name: String,
     pub password: String,
 }
 
 #[derive(Deserialize, Serialize)]
-#[serde(tag = "ModifyUserRequest")]
 pub struct ModifyUserRequest {
     pub id: String,
     pub name: Option<String>,
@@ -37,7 +34,6 @@ pub struct ModifyUserRequest {
 }
 
 #[derive(Deserialize, Serialize)]
-#[serde(tag = "UserIdentifierRequest")]
 pub struct UserIdentifierRequest {
     pub id: String,
 }
