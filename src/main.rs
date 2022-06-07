@@ -14,8 +14,8 @@ use clap::Parser;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::sync::{Arc, Mutex};
-use tungstenite::accept;
 use std::thread;
+use tungstenite::accept;
 
 use std::net::TcpListener;
 
@@ -44,10 +44,7 @@ pub struct UserConnection {
     user: Option<User>,
 }
 
-fn process_message(
-    connection: &mut UserConnection,
-    message: &tungstenite::protocol::Message,
-) {
+fn process_message(connection: &mut UserConnection, message: &tungstenite::protocol::Message) {
     let command: String;
     let body: Body;
 
@@ -57,16 +54,17 @@ fn process_message(
             match serde_json::from_str(&text) {
                 Ok(data) => {
                     parsed = data;
-                } 
+                }
                 Err(e) => {
                     println!("user send incorrect message {:?}", e);
-                    let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
+                    let serialized =
+                        serde_json::to_string(&ServiceResponse { success: false }).unwrap();
                     connection
                         .socket
-                        .write_message(tungstenite::Message::Text(serialized)).unwrap();
+                        .write_message(tungstenite::Message::Text(serialized))
+                        .unwrap();
 
                     return;
-
                 }
             }
             command = parsed.operation;
@@ -154,7 +152,7 @@ fn main() {
     let server = TcpListener::bind(format!("{}:{}", host, port)).unwrap();
     for stream in server.incoming() {
         let current_run_clone = current_run.clone();
-        thread::spawn( move || {
+        thread::spawn(move || {
             match accept(stream.unwrap()) {
                 Ok(websocket) => {
                     println!("New Connection!");

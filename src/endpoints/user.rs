@@ -1,9 +1,7 @@
 use super::{Role, ServiceResponse, User, UserConnection};
 
 use pbkdf2::{
-    password_hash::{
-        Encoding, PasswordHash, PasswordHasher, PasswordVerifier, SaltString,
-    },
+    password_hash::{Encoding, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Pbkdf2,
 };
 
@@ -51,11 +49,17 @@ fn hash_password(password: &String) -> String {
 }
 
 pub fn create_user(connection: &mut UserConnection, request: RegisterUserRequest) {
-    if connection.database.lock().unwrap().check_user_exists(&request.name) {
+    if connection
+        .database
+        .lock()
+        .unwrap()
+        .check_user_exists(&request.name)
+    {
         let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
         connection
             .socket
-            .write_message(tungstenite::Message::Text(serialized)).unwrap();
+            .write_message(tungstenite::Message::Text(serialized))
+            .unwrap();
     }
 
     let email_regex = Regex::new(
@@ -88,7 +92,8 @@ pub fn create_user(connection: &mut UserConnection, request: RegisterUserRequest
     let serialized = serde_json::to_string(&ServiceResponse { success: result }).unwrap();
     connection
         .socket
-        .write_message(tungstenite::Message::Text(serialized)).unwrap();
+        .write_message(tungstenite::Message::Text(serialized))
+        .unwrap();
 }
 
 pub fn login(connection: &mut UserConnection, request: LoginRequest) {
@@ -108,7 +113,8 @@ pub fn login(connection: &mut UserConnection, request: LoginRequest) {
                         serde_json::to_string(&ServiceResponse { success: true }).unwrap();
                     connection
                         .socket
-                        .write_message(tungstenite::Message::Text(serialized)).unwrap();
+                        .write_message(tungstenite::Message::Text(serialized))
+                        .unwrap();
                     return;
                 }
                 _ => {
@@ -123,7 +129,8 @@ pub fn login(connection: &mut UserConnection, request: LoginRequest) {
     let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
     connection
         .socket
-        .write_message(tungstenite::Message::Text(serialized)).unwrap();
+        .write_message(tungstenite::Message::Text(serialized))
+        .unwrap();
 }
 
 pub fn get_session(connection: &mut UserConnection) {
@@ -133,7 +140,8 @@ pub fn get_session(connection: &mut UserConnection) {
     .unwrap();
     connection
         .socket
-        .write_message(tungstenite::Message::Text(serialized)).unwrap();
+        .write_message(tungstenite::Message::Text(serialized))
+        .unwrap();
 }
 
 pub fn delete_user(connection: &mut UserConnection, delete_request: UserIdentifierRequest) {
@@ -155,7 +163,8 @@ pub fn delete_user(connection: &mut UserConnection, delete_request: UserIdentifi
         let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
         connection
             .socket
-            .write_message(tungstenite::Message::Text(serialized)).unwrap();
+            .write_message(tungstenite::Message::Text(serialized))
+            .unwrap();
     }
 }
 
@@ -178,15 +187,14 @@ pub fn modify_user(connection: &mut UserConnection, modify_request: ModifyUserRe
         .unwrap()
         .is_administrator(&user_id);
 
-    if admin || user_id == modify_request.id
-    {
-
+    if admin || user_id == modify_request.id {
         if !admin && modify_request.role.is_some() {
             // only admins can change the role of a suer
             let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
             connection
                 .socket
-                .write_message(tungstenite::Message::Text(serialized)).unwrap();
+                .write_message(tungstenite::Message::Text(serialized))
+                .unwrap();
 
             return;
         }
@@ -212,6 +220,7 @@ pub fn modify_user(connection: &mut UserConnection, modify_request: ModifyUserRe
         let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
         connection
             .socket
-            .write_message(tungstenite::Message::Text(serialized)).unwrap();
+            .write_message(tungstenite::Message::Text(serialized))
+            .unwrap();
     }
 }

@@ -1,6 +1,6 @@
+use super::IdentifierRequest;
 use super::{Region, ServiceResponse, UserConnection};
 use serde::{Deserialize, Serialize};
-use super::IdentifierRequest;
 
 #[derive(Serialize, Deserialize)]
 pub struct RegionRequest {
@@ -24,13 +24,12 @@ fn admin(connection: &mut UserConnection) -> bool {
 }
 
 fn write_error(connection: &mut UserConnection) {
-  let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
+    let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
     connection
         .socket
-        .write_message(tungstenite::Message::Text(serialized)).unwrap();
-
+        .write_message(tungstenite::Message::Text(serialized))
+        .unwrap();
 }
-
 
 pub fn create_region(connection: &mut UserConnection, request: RegionRequest) {
     if !admin(connection) {
@@ -38,21 +37,18 @@ pub fn create_region(connection: &mut UserConnection, request: RegionRequest) {
         return;
     }
 
-    let result = connection
-        .database
-        .lock()
-        .unwrap()
-        .create_region(&Region {
-            id: 0,
-            name: request.name,
-            transport_company: request.transport_company,
-            frequency: request.frequency,
-            protocol: request.protocol,
-        });
+    let result = connection.database.lock().unwrap().create_region(&Region {
+        id: 0,
+        name: request.name,
+        transport_company: request.transport_company,
+        frequency: request.frequency,
+        protocol: request.protocol,
+    });
     let serialized = serde_json::to_string(&ServiceResponse { success: result }).unwrap();
     connection
         .socket
-        .write_message(tungstenite::Message::Text(serialized)).unwrap();
+        .write_message(tungstenite::Message::Text(serialized))
+        .unwrap();
 }
 
 pub fn modify_region(connection: &mut UserConnection, request: ModifyRegionRequest) {
@@ -71,30 +67,28 @@ pub fn modify_region(connection: &mut UserConnection, request: ModifyRegionReque
         let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
         connection
             .socket
-            .write_message(tungstenite::Message::Text(serialized)).unwrap();
+            .write_message(tungstenite::Message::Text(serialized))
+            .unwrap();
 
         return;
     }
 
     let region = result_region.unwrap();
 
-    let result = connection
-        .database
-        .lock()
-        .unwrap()
-        .update_region(&Region {
-            id: 0,
-            name: request.name.unwrap_or(region.name),
-            transport_company: request
-                .transport_company
-                .unwrap_or(region.transport_company),
-            frequency: request.frequency.unwrap_or(region.frequency),
-            protocol: request.protocol.unwrap_or(region.protocol),
-        });
+    let result = connection.database.lock().unwrap().update_region(&Region {
+        id: 0,
+        name: request.name.unwrap_or(region.name),
+        transport_company: request
+            .transport_company
+            .unwrap_or(region.transport_company),
+        frequency: request.frequency.unwrap_or(region.frequency),
+        protocol: request.protocol.unwrap_or(region.protocol),
+    });
     let serialized = serde_json::to_string(&ServiceResponse { success: result }).unwrap();
     connection
         .socket
-        .write_message(tungstenite::Message::Text(serialized)).unwrap();
+        .write_message(tungstenite::Message::Text(serialized))
+        .unwrap();
 }
 
 pub fn delete_region(connection: &mut UserConnection, request: IdentifierRequest) {
@@ -112,7 +106,8 @@ pub fn delete_region(connection: &mut UserConnection, request: IdentifierRequest
     let serialized = serde_json::to_string(&ServiceResponse { success: result }).unwrap();
     connection
         .socket
-        .write_message(tungstenite::Message::Text(serialized)).unwrap();
+        .write_message(tungstenite::Message::Text(serialized))
+        .unwrap();
 }
 
 pub fn list_regions(connection: &mut UserConnection) {
@@ -121,5 +116,6 @@ pub fn list_regions(connection: &mut UserConnection) {
     let serialized = serde_json::to_string(&data).unwrap();
     connection
         .socket
-        .write_message(tungstenite::Message::Text(serialized)).unwrap();
+        .write_message(tungstenite::Message::Text(serialized))
+        .unwrap();
 }

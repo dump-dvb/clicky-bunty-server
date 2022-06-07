@@ -6,25 +6,22 @@ pub use super::{Region, Role, Station, User, UserConnection};
 
 pub use station::{
     approve_station, create_station, delete_station, generate_token, list_stations, modify_station,
-    ApproveStation, CreateStationRequest, ListStationsRequest,
-    ModifyStation,
+    ApproveStation, CreateStationRequest, ListStationsRequest, ModifyStation,
 };
 pub use user::{
-    create_user, delete_user, get_session, login, modify_user, LoginRequest,
-    ModifyUserRequest, RegisterUserRequest, UserIdentifierRequest,
+    create_user, delete_user, get_session, login, modify_user, LoginRequest, ModifyUserRequest,
+    RegisterUserRequest, UserIdentifierRequest,
 };
 
 pub use region::{
-    create_region, delete_region, list_regions, modify_region, ModifyRegionRequest,
-    RegionRequest,
+    create_region, delete_region, list_regions, modify_region, ModifyRegionRequest, RegionRequest,
 };
 
 use serde::{Deserialize, Serialize};
 
-
 #[derive(Serialize, Deserialize)]
 pub struct IdentifierRequest {
-    pub id: u32
+    pub id: u32,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -45,7 +42,7 @@ pub enum Body {
     CreateRegion(RegionRequest),
     ModifyRegion(ModifyRegionRequest),
 
-    Identifier(IdentifierRequest)
+    Identifier(IdentifierRequest),
 }
 
 #[derive(Serialize)]

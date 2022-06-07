@@ -1,4 +1,4 @@
-use super::{ServiceResponse, Station, UserConnection, IdentifierRequest};
+use super::{IdentifierRequest, ServiceResponse, Station, UserConnection};
 use rand::{distributions::Alphanumeric, Rng};
 use serde::{Deserialize, Serialize};
 
@@ -72,21 +72,19 @@ pub fn create_station(connection: &mut UserConnection, request: CreateStationReq
             approved: false,
         };
 
-        let result = connection
-            .database
-            .lock()
-            .unwrap()
-            .create_station(&station);
+        let result = connection.database.lock().unwrap().create_station(&station);
 
         let serialized = serde_json::to_string(&ServiceResponse { success: result }).unwrap();
         connection
             .socket
-            .write_message(tungstenite::Message::Text(serialized)).unwrap();
+            .write_message(tungstenite::Message::Text(serialized))
+            .unwrap();
     } else {
         let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
         connection
             .socket
-            .write_message(tungstenite::Message::Text(serialized)).unwrap();
+            .write_message(tungstenite::Message::Text(serialized))
+            .unwrap();
     }
 }
 
@@ -100,22 +98,27 @@ pub fn list_stations(connection: &mut UserConnection, request: ListStationsReque
     let serialized = serde_json::to_string(&data).unwrap();
     connection
         .socket
-        .write_message(tungstenite::Message::Text(serialized)).unwrap();
+        .write_message(tungstenite::Message::Text(serialized))
+        .unwrap();
 }
 
 pub fn delete_station(connection: &mut UserConnection, request: IdentifierRequest) {
     let mut result_query = false;
-    if connection.user.as_ref().unwrap().is_admin() || owns_station(connection, &request.id){
+    if connection.user.as_ref().unwrap().is_admin() || owns_station(connection, &request.id) {
         result_query = connection
             .database
             .lock()
             .unwrap()
             .delete_station(&request.id);
     }
-    let serialized = serde_json::to_string(&ServiceResponse { success: result_query }).unwrap();
+    let serialized = serde_json::to_string(&ServiceResponse {
+        success: result_query,
+    })
+    .unwrap();
     connection
         .socket
-        .write_message(tungstenite::Message::Text(serialized)).unwrap();
+        .write_message(tungstenite::Message::Text(serialized))
+        .unwrap();
 }
 
 pub fn modify_station(connection: &mut UserConnection, request: ModifyStation) {
@@ -131,7 +134,7 @@ pub fn modify_station(connection: &mut UserConnection, request: ModifyStation) {
 
     let station = result_station.unwrap();
 
-    if connection.user.as_ref().unwrap().is_admin() || owns_station(connection, &request.id){
+    if connection.user.as_ref().unwrap().is_admin() || owns_station(connection, &request.id) {
         connection
             .database
             .lock()
@@ -160,7 +163,7 @@ pub fn approve_station(connection: &mut UserConnection, request: ApproveStation)
 }
 
 pub fn generate_token(connection: &mut UserConnection, request: IdentifierRequest) {
-    if connection.user.as_ref().unwrap().is_admin() || owns_station(connection, &request.id){
+    if connection.user.as_ref().unwrap().is_admin() || owns_station(connection, &request.id) {
         let random_token: String = rand::thread_rng()
             .sample_iter(&Alphanumeric)
             .take(32)
