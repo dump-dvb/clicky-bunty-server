@@ -222,7 +222,7 @@ impl DataBaseConnection {
             &[&name],
         ) {
             Ok(data) => Some(User {
-                id: Uuid::parse_str(data.get(0)).unwrap(),
+                id: Uuid::parse_str(data.get(0)),
                 name: data.get(1),
                 email: data.get(2),
                 password: data.get(3),
