@@ -1,6 +1,6 @@
 extern crate postgres;
 
-use postgres::{config::SslMode, Client, NoTls};
+use postgres::{Client, NoTls, config::SslMode };
 use serde::ser::{SerializeStruct, Serializer};
 use serde::{Deserialize, Serialize};
 use std::clone::Clone;
@@ -13,6 +13,7 @@ pub enum Role {
     User = 6,
     Administrator = 0,
 }
+
 
 impl Role {
     pub fn from(role: u32) -> Role {
@@ -29,6 +30,7 @@ impl Role {
         }
     }
 }
+
 
 #[derive(Debug)]
 pub struct User {
@@ -120,15 +122,9 @@ impl DataBaseConnection {
                 .password(env::var("POSTGRES_PASSWORD").unwrap())
                 .dbname("dvbdump")
                 .host(&env::var("POSTGRES_HOST").unwrap_or(default_postgres_host))
-                .port(
-                    env::var("POSTGRES_PORT")
-                        .unwrap_or(default_postgres_port)
-                        .parse::<u16>()
-                        .unwrap(),
-                )
+                .port(env::var("POSTGRES_PORT").unwrap_or(default_postgres_port).parse::<u16>().unwrap())
                 .ssl_mode(SslMode::Disable)
-                .connect(NoTls)
-                .unwrap(),
+                .connect(NoTls).unwrap(),
         };
         println!("Creating Database Tables !");
         database.create_tables();
@@ -136,41 +132,40 @@ impl DataBaseConnection {
         return database;
     }
 
-    pub fn create_tables(&mut self) {
-        match self.postgres.execute(
-            "CREATE TABLE users (
+    pub  fn create_tables(&mut self) {
+        match self.postgres
+            .execute(
+                "CREATE TABLE users (
                     id              UUID PRIMARY KEY,
                     name            TEXT NOT NULL,
                     email           TEXT NOT NULL,
                     password        VARCHAR(100) NOT NULL,
                     role            INT NOT NULL
                   )",
-            &[],
+                &[],
         ) {
-            Err(_) => {
-                println!("Did not create table user maybe it already exists!")
-            }
+            Err(_) => {println!("Did not create table user maybe it already exists!")},
             _ => {}
         }
 
-        match self.postgres.execute(
-            "CREATE TABLE regions (
+        match self.postgres
+            .execute(
+                "CREATE TABLE regions (
                     id              SERIAL PRIMARY KEY,
                     name            TEXT NOT NULL,
                     transport_company TEXT NOT NULL,
                     frequency       BIGINT NOT NULL,
                     protocol        TEXT NOT NULL
                   )",
-            &[],
+                &[],
         ) {
-            Err(_) => {
-                println!("Did not create table regions maybe it already exists!")
-            }
+            Err(_) => {println!("Did not create table regions maybe it already exists!")},
             _ => {}
         }
 
-        match self.postgres.execute(
-            "CREATE TABLE stations (
+        match self.postgres
+            .execute(
+                "CREATE TABLE stations (
                     id              SERIAL PRIMARY KEY,
                     token           VARCHAR(32),
                     name            TEXT NOT NULL,
@@ -180,16 +175,14 @@ impl DataBaseConnection {
                     owner           UUID REFERENCES users (id) NOT NULL,
                     approved        BOOLEAN NOT NULL
                   )",
-            &[],
+                &[],
         ) {
-            Err(_) => {
-                println!("Did not create table stations maybe it already exists!")
-            }
+            Err(_) => {println!("Did not create table stations maybe it already exists!")},
             _ => {}
         }
     }
 
-    pub fn query_station(&mut self, token: &u32) -> Option<Station> {
+    pub  fn query_station(&mut self, token: &u32) -> Option<Station> {
         match self.postgres.query_one(
             "SELECT token, id, name, lat, lon, region, owner, approved FROM stations WHERE id=$1",
             &[&token],
@@ -208,7 +201,7 @@ impl DataBaseConnection {
         }
     }
 
-    pub fn query_region(&mut self, id: &u32) -> Option<Region> {
+    pub  fn query_region(&mut self, id: &u32) -> Option<Region> {
         match self.postgres.query_one(
             "SELECT id, name, transport_company, frequency, protocol FROM stations WHERE id=$1",
             &[id],
@@ -223,18 +216,21 @@ impl DataBaseConnection {
             _ => None,
         }
     }
-    pub fn query_user(&mut self, name: &String) -> Option<User> {
+    pub  fn query_user(&mut self, name: &String) -> Option<User> {
         match self.postgres.query_one(
             "SELECT id, name, email, password FROM users WHERE name=$1",
             &[&name],
         ) {
-            Ok(data) => Some(User {
-                id: Uuid::parse_str(data.get(0)).unwrap(),
-                name: data.get(1),
-                email: data.get(2),
-                password: data.get(3),
-                role: Role::from(data.get(4)),
-            }),
+            Ok(data) => {
+                println!("data: {:?}", data);
+                Some(User {
+                    id: Uuid::parse_str(data.get(0)).unwrap(),
+                    name: data.get(1),
+                    email: data.get(2),
+                    password: data.get(3),
+                    role: Role::from(data.get(4)),
+                })
+            },
             Err(e) => {
                 println!("query user {:?}", e);
                 None
@@ -242,7 +238,7 @@ impl DataBaseConnection {
         }
     }
 
-    pub fn query_user_by_id(&mut self, id: &String) -> Option<User> {
+    pub  fn query_user_by_id(&mut self, id: &String) -> Option<User> {
         match self.postgres.query_one(
             "SELECT id, name, email, password FROM users WHERE id=$1",
             &[id],
@@ -262,7 +258,7 @@ impl DataBaseConnection {
             .postgres
             .query("SELECT 1 FROM regions WHERE id=$1", &[&id])
         {
-            Ok(data) => data.len() > 0,
+            Ok(data) => {data.len() > 0}
             _ => true,
         }
     }
@@ -272,7 +268,9 @@ impl DataBaseConnection {
             .postgres
             .query("SELECT 1 FROM users WHERE name=$1", &[name])
         {
-            Ok(data) => data.len() > 0,
+            Ok(data) => {
+                data.len() > 0
+            },
             Err(e) => {
                 // illegal state has most likely happend prohibit login
                 println!("Exists error: {:?}", e);
@@ -280,10 +278,13 @@ impl DataBaseConnection {
             }
         }
     }
-    pub fn list_stations(&mut self, owner: Option<String>, region: Option<u32>) -> Vec<Station> {
+    pub  fn list_stations(
+        &mut self,
+        owner: Option<String>,
+        region: Option<u32>,
+    ) -> Vec<Station> {
         let mut station_list: Vec<Station> = Vec::new();
-        let argumnet_count =
-            owner.clone().map_or_else(|| 0, |_| 1) + region.map_or_else(|| 0, |_| 1);
+        let argumnet_count = owner.clone().map_or_else(|| 0, |_| 1) + region.map_or_else(|| 0, |_| 1);
 
         let owner_query = owner.clone().map_or_else(
             || String::from(""),
@@ -334,7 +335,7 @@ impl DataBaseConnection {
         station_list
     }
 
-    pub fn list_regions(&mut self) -> Vec<Region> {
+    pub  fn list_regions(&mut self) -> Vec<Region> {
         let mut results = Vec::new();
         for row in self
             .postgres
@@ -355,27 +356,28 @@ impl DataBaseConnection {
         results
     }
 
-    pub fn create_user(&mut self, user: &User) -> bool {
+    pub  fn create_user(&mut self, user: &User) -> bool {
         println!("create user: {:?}", &user);
-        match self.postgres.execute(
-            "INSERT INTO users (id, name, email, password, role) VALUES ($1, $2, $3, $4, $5)",
-            &[
-                &user.id,
-                &user.name,
-                &user.email,
-                &user.password,
-                &(user.role.as_int() as i32),
-            ],
-        ) {
-            Ok(_) => true,
-            Err(e) => {
-                println!("Error: {}", e);
-                false
-            }
+        match self.postgres
+            .execute(
+                "INSERT INTO users (id, name, email, password, role) VALUES ($1, $2, $3, $4, $5)",
+                &[
+                    &user.id,
+                    &user.name,
+                    &user.email,
+                    &user.password,
+                    &(user.role.as_int() as i32),
+                ],
+            ) {
+                Ok(_) => { true }
+                Err(e) => {
+                    println!("Error: {}", e);
+                    false
+                }
         }
     }
 
-    pub fn create_region(&mut self, region: &Region) -> bool {
+    pub  fn create_region(&mut self, region: &Region) -> bool {
         match self.postgres
             .execute(
                 "INSERT INTO regions (id, name, transport_company, frequency, protocol) VALUES ($1, $2, $3, $4, $5)",
@@ -395,7 +397,7 @@ impl DataBaseConnection {
         }
     }
 
-    pub fn create_station(&mut self, station: &Station) -> bool {
+    pub  fn create_station(&mut self, station: &Station) -> bool {
         match self.postgres.execute(
             "INSERT INTO users (token, name, lat, lon, region, owner, approved) VALUES ($1, $2, $3, $4, $5, $6, $7)",
             &[
@@ -416,14 +418,14 @@ impl DataBaseConnection {
         }
     }
 
-    pub fn first_user(&mut self) -> bool {
+    pub  fn first_user(&mut self) -> bool {
         match self.postgres.query_one("SELECT 1 FROM users", &[]) {
             Ok(_) => true,
             _ => false,
         }
     }
 
-    pub fn is_administrator(&mut self, uid: &String) -> bool {
+    pub  fn is_administrator(&mut self, uid: &String) -> bool {
         match self
             .postgres
             .query_one("SELECT role FROM users WHERE id=$1", &[uid])
@@ -433,32 +435,32 @@ impl DataBaseConnection {
         }
     }
 
-    pub fn get_owner_from_station(&mut self, region_id: &u32) -> Option<Uuid> {
-        match self.query_station(region_id) {
+    pub  fn get_owner_from_station(&mut self, region_id: &u32) -> Option<Uuid> {
+        match self.query_station(region_id){
             Some(region) => Some(region.owner),
             _ => None,
         }
     }
 
-    pub fn delete_user(&mut self, uid: &String) -> bool {
+    pub  fn delete_user(&mut self, uid: &String) -> bool {
         self.postgres
             .execute("DELETE FROM users WHERE id=$1", &[uid])
             .is_ok()
     }
 
-    pub fn delete_region(&mut self, id: &u32) -> bool {
+    pub  fn delete_region(&mut self, id: &u32) -> bool {
         self.postgres
             .execute("DELETE FROM users WHERE id=$1", &[id])
             .is_ok()
     }
 
-    pub fn delete_station(&mut self, id: &u32) -> bool {
+    pub  fn delete_station(&mut self, id: &u32) -> bool {
         self.postgres
             .execute("DELETE FROM users WHERE id=$1", &[id])
             .is_ok()
     }
 
-    pub fn update_user(&mut self, user: &User) -> bool {
+    pub  fn update_user(&mut self, user: &User) -> bool {
         self.postgres
             .execute(
                 "UPDATE users SET name=$1, email=$2, password=$3, role=$4 WHERE id=$5",
@@ -473,7 +475,7 @@ impl DataBaseConnection {
             .is_ok()
     }
 
-    pub fn update_station(&mut self, station: &Station) -> bool {
+    pub  fn update_station(&mut self, station: &Station) -> bool {
         self.postgres
             .execute(
                 "UPDATE station SET name=$1, lat=$2, lon=$3, region=$4 WHERE id=$5",
@@ -488,7 +490,7 @@ impl DataBaseConnection {
             .is_ok()
     }
 
-    pub fn update_region(&mut self, region: &Region) -> bool {
+    pub  fn update_region(&mut self, region: &Region) -> bool {
         self.postgres.execute("UPDATE region SET name=$1, transport_company=$2, frequency=$3, protocol=$4 WHERE id=$5",
                               &[&region.name, &region.transport_company, &(region.frequency as i64), &region.protocol, &(region.id as i64)]).is_ok()
     }
