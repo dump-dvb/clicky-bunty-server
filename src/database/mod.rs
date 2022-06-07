@@ -263,15 +263,16 @@ impl DataBaseConnection {
     pub fn check_user_exists(&mut self, name: &String) -> bool {
         match self
             .postgres
-            .query_one("SELECT 1 FROM users WHERE name=$1", &[name])
+            .query("SELECT 1 FROM users WHERE name=$1", &[name])
         {
             Ok(data) => {
                 println!("Exists: data: {:?}", data);
-                true
+                data.len() > 0
             },
             Err(e) => {
+                // illegal state has most likely happend prohibit login
                 println!("Exists error: {:?}", e);
-                false
+                true
             }
         }
     }
