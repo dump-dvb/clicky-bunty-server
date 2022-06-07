@@ -265,8 +265,14 @@ impl DataBaseConnection {
             .postgres
             .query_one("SELECT 1 FROM users WHERE name=$1", &[name])
         {
-            Ok(_) => true,
-            _ => false,
+            Ok(data) => {
+                println!("Exists: data: {:?}", data);
+                true
+            },
+            Err(e) => {
+                println!("Exists error: {:?}", e);
+                false
+            }
         }
     }
     pub  fn list_stations(
