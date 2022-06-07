@@ -228,7 +228,10 @@ impl DataBaseConnection {
                 password: data.get(3),
                 role: Role::from(data.get(4)),
             }),
-            _ => None,
+            Err(e) => {
+                println!("query user {:?}", e);
+                None
+            }
         }
     }
 
