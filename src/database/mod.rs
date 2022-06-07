@@ -222,9 +222,10 @@ impl DataBaseConnection {
             &[&name],
         ) {
             Ok(data) => {
+                let user_id: Uuid = data.get::<>(0);
                 println!("data: {:?}", data);
                 Some(User {
-                    id: Uuid::parse_str(data.get(0)).unwrap(),
+                    id: user_id,
                     name: data.get(1),
                     email: data.get(2),
                     password: data.get(3),
