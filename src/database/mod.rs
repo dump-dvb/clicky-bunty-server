@@ -218,7 +218,7 @@ impl DataBaseConnection {
     }
     pub  fn query_user(&mut self, name: &String) -> Option<User> {
         match self.postgres.query_one(
-            "SELECT id, name, email, password FROM users WHERE name=$1",
+            "SELECT id, name, email, password, role FROM users WHERE name=$1",
             &[&name],
         ) {
             Ok(data) => {
