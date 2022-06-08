@@ -144,7 +144,7 @@ impl DataBaseConnection {
                   )",
                 &[],
         ) {
-            Err(_) => {println!("Did not create table user maybe it already exists!"); },
+            Err(e) => {println!("Did not create table user maybe it already exists! {:?}", e); },
             _ => {}
         }
 
@@ -159,7 +159,7 @@ impl DataBaseConnection {
                   )",
                 &[],
         ) {
-            Err(_) => {println!("Did not create table regions maybe it already exists!"); },
+            Err(e) => {println!("Did not create table regions maybe it already exists! {:?}", e); },
             _ => {}
         }
 
@@ -169,15 +169,15 @@ impl DataBaseConnection {
                     id              SERIAL PRIMARY KEY,
                     token           VARCHAR(32),
                     name            TEXT NOT NULL,
-                    lat             DOUBLE NOT NULL CONSTRAINT lat <= 180 CONSTRAINT lat >= -180,
-                    lon             DOUBLE NOT NULL CONSTRAINT lon <= 90 CONSTRAINT lon >= -90,
-                    region          INT regions (id) NOT NULL,
-                    owner           UUID REFERENCES users (id) NOT NULL,
+                    lat             DOUBLE PRECISION NOT NULL,
+                    lon             DOUBLE PRECISION NOT NULL,
+                    region          INT REFERENCES regions(id) NOT NULL,
+                    owner           UUID REFERENCES users(id) NOT NULL,
                     approved        BOOLEAN NOT NULL
                   )",
                 &[],
         ) {
-            Err(_) => {println!("Did not create table stations maybe it already exists!");},
+            Err(e) => {println!("Did not create table stations maybe it already exists! {:?}", e);},
             _ => { }
         }
     }
