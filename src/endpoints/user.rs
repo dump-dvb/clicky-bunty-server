@@ -138,8 +138,7 @@ pub fn login(connection: &mut UserConnection, request: LoginRequest) {
 pub fn get_session(connection: &mut UserConnection) {
     let serialized = serde_json::to_string(&UserIdentifierRequest {
         id: connection.user.as_ref().unwrap().id.to_string(),
-    })
-    .unwrap();
+    }).unwrap();
     connection
         .socket
         .write_message(tungstenite::Message::Text(serialized))

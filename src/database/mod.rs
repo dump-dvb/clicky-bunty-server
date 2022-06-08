@@ -310,15 +310,15 @@ impl DataBaseConnection {
         if owner.is_some() && region.is_some() {
             results = self
                 .postgres
-                .query(&query, &[&owner.unwrap(), &region.unwrap()])
+                .query(&query, &[&(owner.unwrap() as i32), &(region.unwrap() as i32)])
                 .unwrap();
         } else if owner.is_some() {
             results = self
                 .postgres
-                .query(&query, &[&owner.unwrap().to_string()])
+                .query(&query, &[&(owner.unwrap() as i32)])
                 .unwrap();
         } else if region.is_some() {
-            results = self.postgres.query(&query, &[&region.unwrap()]).unwrap();
+            results = self.postgres.query(&query, &[&(region.unwrap() as i32)]).unwrap();
         } else {
             results = self.postgres.query(&query, &[]).unwrap();
         }

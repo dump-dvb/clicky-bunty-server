@@ -41,6 +41,10 @@ list_users = {
     "operation": "user/list",
 }
 
+get_session = {
+    "operation": "user/session"
+}
+
 create_region = {
     "operation": "region/create",
     "body": {
@@ -68,7 +72,7 @@ create_station = {
         "name": "Dresden Station Pieschen",
         "lat": 0.0,
         "lon": 0.0,
-        "region": 0
+        "region": 1
     }
 }
 
@@ -95,7 +99,11 @@ async def hello(uri):
         print(await websocket.recv())
         await websocket.send(json.dumps(list_users))
         print(await websocket.recv())
-        
+
+        await websocket.send(json.dumps(get_session))
+        session = await websocket.recv()
+        print("User Id:", session)
+
         await websocket.send(json.dumps(create_region))
         print(await websocket.recv())
         await websocket.send(json.dumps(list_regions))
