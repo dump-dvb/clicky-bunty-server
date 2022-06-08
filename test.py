@@ -76,6 +76,14 @@ list_stations = {
     "operation": "station/list"
 }
 
+
+list_stations = {
+    "operation": "station/list",
+    "body": {
+        "desired_region": 0
+    }
+}
+
 async def hello(uri):
     async with connect(uri) as websocket:
         print("Request!")
@@ -92,5 +100,11 @@ async def hello(uri):
         print(await websocket.recv())
         await websocket.send(json.dumps(list_regions))
         print(await websocket.recv())
+
+        await websocket.send(json.dumps(create_station))
+        print(await websocket.recv())
+        await websocket.send(json.dumps(list_stations))
+        print(await websocket.recv())
+
 
 asyncio.run(hello("wss://management-backend.staging.dvb.solutions"))
