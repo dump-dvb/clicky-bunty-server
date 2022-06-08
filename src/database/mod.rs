@@ -350,7 +350,7 @@ impl DataBaseConnection {
             .unwrap()
         {
             results.push(Region {
-                id: row.get(0),
+                id: row.get::<usize, i32>(0) as u32,
                 name: row.get(1),
                 transport_company: row.get(2),
                 frequency: row.get::<usize, i64>(3) as u64,
@@ -365,21 +365,19 @@ impl DataBaseConnection {
         match self
             .postgres
             .query(
-                "SELECT id, name, email FROM users",
+                "SELECT id, name, email, role FROM users",
                 &[],
-            )
-        {
+            ) {
             Ok(data) => {
                 for row in data {
                     let user_id: Uuid = row.get(0);
-                    let role: i32 = row.get(4);
+                    let role: i32 = row.get(3);
                     results.push(User {
                         id: user_id,
                         name: row.get(1),
                         email: row.get(2),
-                        password: row.get(3),
+                        password: String::from(""),
                         role: Role::from(role as u32),
-
                     });
                 }
             }
@@ -411,19 +409,22 @@ impl DataBaseConnection {
         }
     }
 
-    pub  fn create_region(&mut self, region: &Region) -> bool {
+    pub fn create_region(&mut self, region: &Region) -> bool {
+        println!("region: {:?}", &region);
         match self.postgres
             .execute(
-                "INSERT INTO regions (id, name, transport_company, frequency, protocol) VALUES ($1, $2, $3, $4, $5)",
+                "INSERT INTO regions (name, transport_company, frequency, protocol) VALUES ($1, $2, $3, $4)",
                 &[
-                    &(region.id as i32),
                     &region.name,
                     &region.transport_company,
                     &(region.frequency as i64),
                     &region.protocol,
                 ],
             ) {
-            Ok(_) => { true }
+            Ok(respone) => {
+                println!("Response: create region: {:?}", respone);
+                true 
+            }
             Err(e) => {
                 println!("Error: {}", e);
                 false

@@ -2,7 +2,7 @@ use super::IdentifierRequest;
 use super::{Region, ServiceResponse, UserConnection};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct RegionRequest {
     pub name: String,
     pub transport_company: String,
@@ -10,7 +10,7 @@ pub struct RegionRequest {
     pub protocol: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ModifyRegionRequest {
     id: u32,
     pub name: Option<String>,
@@ -32,6 +32,7 @@ fn write_error(connection: &mut UserConnection) {
 }
 
 pub fn create_region(connection: &mut UserConnection, request: RegionRequest) {
+    println!("message: {}", admin(connection));
     if !admin(connection) {
         write_error(connection);
         return;
@@ -44,6 +45,8 @@ pub fn create_region(connection: &mut UserConnection, request: RegionRequest) {
         frequency: request.frequency,
         protocol: request.protocol,
     });
+
+
     let serialized = serde_json::to_string(&ServiceResponse { success: result }).unwrap();
     connection
         .socket

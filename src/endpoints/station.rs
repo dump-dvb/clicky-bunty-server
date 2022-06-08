@@ -2,7 +2,7 @@ use super::{IdentifierRequest, ServiceResponse, Station, UserConnection};
 use rand::{distributions::Alphanumeric, Rng};
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct CreateStationRequest {
     pub name: String,
     pub lat: f64,
@@ -10,13 +10,13 @@ pub struct CreateStationRequest {
     pub region: u32,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct ListStationsRequest {
-    pub owner: Option<String>,
-    pub region: Option<u32>,
+    pub desired_owner: Option<String>,
+    pub desired_region: Option<u32>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct ModifyStation {
     pub id: u32,
     pub name: Option<String>,
@@ -25,7 +25,7 @@ pub struct ModifyStation {
     pub region: Option<u32>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct ApproveStation {
     pub id: u32,
     pub approved: bool,
@@ -93,7 +93,7 @@ pub fn list_stations(connection: &mut UserConnection, request: ListStationsReque
         .database
         .lock()
         .unwrap()
-        .list_stations(request.owner, request.region);
+        .list_stations(request.desired_owner, request.desired_region);
 
     let serialized = serde_json::to_string(&data).unwrap();
     connection

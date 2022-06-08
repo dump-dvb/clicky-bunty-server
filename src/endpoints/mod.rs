@@ -20,12 +20,12 @@ pub use region::{
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct IdentifierRequest {
     pub id: u32,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 #[serde(untagged)]
 pub enum Body {
     Empty,
@@ -35,15 +35,14 @@ pub enum Body {
     UserIdentifier(UserIdentifierRequest),
 
     CreateStation(CreateStationRequest),
-    ListStation(ListStationsRequest),
     ModifyStation(ModifyStation),
     ApproveStation(ApproveStation),
 
-    ListStations(ListStationsRequest),
     CreateRegion(RegionRequest),
     ModifyRegion(ModifyRegionRequest),
 
     Identifier(IdentifierRequest),
+    ListStations(ListStationsRequest),
 }
 
 #[derive(Serialize)]

@@ -41,6 +41,40 @@ list_users = {
     "operation": "user/list",
 }
 
+create_region = {
+    "operation": "region/create",
+    "body": {
+        "name": "dresden",
+        "frequency": 173000000,
+        "transport_company": "dresdner verkehrs betriebe",
+        "protocol": ""
+    }
+}
+
+list_regions = {
+    "operation": "region/list"
+}
+
+modify_region = {
+    "operation":"region/modify",
+    "body": {
+
+    }
+}
+
+create_station = {
+    "operation": "station/create",
+    "body": {
+        "name": "Dresden Station Pieschen",
+        "lat": 0.0,
+        "lon": 0.0,
+        "region": 0
+    }
+}
+
+list_stations = {
+    "operation": "station/list"
+}
 
 async def hello(uri):
     async with connect(uri) as websocket:
@@ -52,6 +86,11 @@ async def hello(uri):
         await websocket.send(json.dumps(login_admin))
         print(await websocket.recv())
         await websocket.send(json.dumps(list_users))
+        print(await websocket.recv())
+        
+        await websocket.send(json.dumps(create_region))
+        print(await websocket.recv())
+        await websocket.send(json.dumps(list_regions))
         print(await websocket.recv())
 
 asyncio.run(hello("wss://management-backend.staging.dvb.solutions"))

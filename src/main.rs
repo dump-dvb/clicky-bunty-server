@@ -6,7 +6,7 @@ pub use database::{DataBaseConnection, Region, Role, Station, User};
 use endpoints::{
     approve_station, create_region, create_station, create_user, list_users, delete_region, delete_station,
     delete_user, generate_token, get_session, list_regions, list_stations, login, modify_region,
-    modify_station, modify_user, Body,
+    modify_station, modify_user, Body, ListStationsRequest
 };
 use structs::Args;
 
@@ -84,6 +84,8 @@ fn process_message(connection: &mut UserConnection, message: &tungstenite::proto
 
     let authenticated = connection.user.is_some();
 
+    println!("command: {}, body: {:?}, authenticated: {}", &command.as_str(), &body, authenticated);
+
     match (command.as_str(), body, authenticated) {
         ("user/register", Body::Register(parsed_struct), false) => {
             create_user(connection, parsed_struct);
@@ -109,6 +111,9 @@ fn process_message(connection: &mut UserConnection, message: &tungstenite::proto
         ("station/list", Body::ListStations(parsed_struct), _) => {
             list_stations(connection, parsed_struct);
         }
+        ("station/list", Body::Empty, _) => {
+            list_stations(connection, ListStationsRequest { desired_owner: None, desired_region: None});
+        }
         ("station/delete", Body::Identifier(parsed_struct), true) => {
             delete_station(connection, parsed_struct);
         }
@@ -122,6 +127,7 @@ fn process_message(connection: &mut UserConnection, message: &tungstenite::proto
             generate_token(connection, parsed_struct);
         }
         ("region/create", Body::CreateRegion(parsed_struct), true) => {
+            println!("Region Request");
             create_region(connection, parsed_struct);
         }
         ("region/delete", Body::Identifier(parsed_struct), true) => {

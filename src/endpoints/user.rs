@@ -9,20 +9,20 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct RegisterUserRequest {
     pub name: String,
     pub email: String,
     pub password: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct LoginRequest {
     pub name: String,
     pub password: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct ModifyUserRequest {
     pub id: String,
     pub name: Option<String>,
@@ -31,7 +31,7 @@ pub struct ModifyUserRequest {
     pub role: Option<Role>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct UserIdentifierRequest {
     pub id: String,
 }
@@ -228,13 +228,8 @@ pub fn modify_user(connection: &mut UserConnection, modify_request: ModifyUserRe
 }
 
 pub fn list_users(connection: &mut UserConnection) {
-
-    let user_id = connection.user.as_ref().unwrap().id.to_string();
-    if connection
-        .database
-        .lock()
-        .unwrap()
-        .is_administrator(&user_id) {
+    println!("current user: {:?}", &connection.user);
+    if connection.user.as_ref().unwrap().role == Role::Administrator {
             let users = connection.database.lock().unwrap().list_users();
 
             let serialized = serde_json::to_string(&users).unwrap();

@@ -1,4 +1,4 @@
-# clicky bunty server
+f clicky bunty server
 
 Server which handels users, regions and stations. This service is the main point of operation.
 
