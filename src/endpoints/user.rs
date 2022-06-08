@@ -226,3 +226,29 @@ pub fn modify_user(connection: &mut UserConnection, modify_request: ModifyUserRe
             .unwrap();
     }
 }
+
+pub fn list_users(connection: &mut UserConnection) {
+
+    let user_id = connection.user.as_ref().unwrap().id.to_string();
+    if connection
+        .database
+        .lock()
+        .unwrap()
+        .is_administrator(&user_id) {
+            let users = connection.database.lock().unwrap().list_users();
+
+            let serialized = serde_json::to_string(&users).unwrap();
+            connection
+                .socket
+                .write_message(tungstenite::Message::Text(serialized))
+                .unwrap();
+
+    } else {
+        let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
+        connection
+            .socket
+            .write_message(tungstenite::Message::Text(serialized))
+            .unwrap();
+    }
+}
+

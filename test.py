@@ -39,7 +39,6 @@ create_regular_user = {
 
 list_users = {
     "operation": "user/list",
-    "body": {}
 }
 
 

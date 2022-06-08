@@ -100,6 +100,9 @@ fn process_message(connection: &mut UserConnection, message: &tungstenite::proto
         ("user/modify", Body::UserModify(parsed_struct), true) => {
             modify_user(connection, parsed_struct);
         }
+        ("user/list", Body::Empty, true) => {
+
+        }
         ("station/create", Body::CreateStation(parsed_struct), true) => {
             create_station(connection, parsed_struct);
         }

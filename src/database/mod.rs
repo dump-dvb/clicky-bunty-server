@@ -339,7 +339,7 @@ impl DataBaseConnection {
         station_list
     }
 
-    pub  fn list_regions(&mut self) -> Vec<Region> {
+    pub fn list_regions(&mut self) -> Vec<Region> {
         let mut results = Vec::new();
         for row in self
             .postgres
@@ -359,6 +359,36 @@ impl DataBaseConnection {
         }
         results
     }
+
+    pub fn list_users(&mut self) -> Vec<User> {
+        let mut results = Vec::new();
+        match self
+            .postgres
+            .query(
+                "SELECT id, name, email FROM users",
+                &[],
+            )
+        {
+            Ok(data) => {
+                for row in data {
+                    let user_id: Uuid = row.get(0);
+                    let role: i32 = row.get(4);
+                    results.push(User {
+                        id: user_id,
+                        name: row.get(1),
+                        email: row.get(2),
+                        password: row.get(3),
+                        role: Role::from(role as u32),
+
+                    });
+                }
+            }
+            _ => {}
+
+        }
+        results
+    }
+
 
     pub  fn create_user(&mut self, user: &User) -> bool {
         println!("create user: {:?}", &user);
@@ -423,9 +453,9 @@ impl DataBaseConnection {
     }
 
     pub  fn first_user(&mut self) -> bool {
-        match self.postgres.query_one("SELECT 1 FROM users", &[]) {
-            Ok(_) => true,
-            _ => false,
+        match self.postgres.query("SELECT 1 FROM users", &[]) {
+            Ok(data) => { data.len() == 0 },
+            Err(_) => false,
         }
     }
 
