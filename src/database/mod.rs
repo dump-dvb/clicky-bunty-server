@@ -310,30 +310,38 @@ impl DataBaseConnection {
         if owner.is_some() && region.is_some() {
             results = self
                 .postgres
-                .query(&query, &[&(owner.unwrap() as i32), &(region.unwrap() as i32)])
-                .unwrap();
+                .query(&query, &[&(owner.unwrap()), &(region.unwrap() as i32)]);
         } else if owner.is_some() {
             results = self
                 .postgres
-                .query(&query, &[&(owner.unwrap() as i32)])
-                .unwrap();
+                .query(&query, &[&(owner.unwrap())]);
         } else if region.is_some() {
-            results = self.postgres.query(&query, &[&(region.unwrap() as i32)]).unwrap();
+            results = self.postgres.query(&query, &[&(region.unwrap() as i32)]);
         } else {
-            results = self.postgres.query(&query, &[]).unwrap();
+            results = self.postgres.query(&query, &[]);
         }
+        match results {
+            Ok(data) => {
+                for row in data {
+                    let station_id: i32 = row.get(0);
+                    let region: i32 = row.get(4);
+                    let owner: Uuid = row.get(5);
 
-        for row in results {
-            station_list.push(Station {
-                id: row.get(0),
-                token: None,
-                name: row.get(1),
-                lat: row.get(2),
-                lon: row.get(3),
-                region: row.get(4),
-                owner: Uuid::parse_str(row.get(5)).unwrap(),
-                approved: row.get(6),
-            });
+                    station_list.push(Station {
+                        id: station_id as u32,
+                        token: None,
+                        name: row.get(1),
+                        lat: row.get(2),
+                        lon: row.get(3),
+                        region: region as u32,
+                        owner: owner,
+                        approved: row.get(6),
+                    });
+                }
+            }
+            Err(e) => {
+                println!("Error on searching stations {:?}",e);
+            }
         }
 
         station_list
