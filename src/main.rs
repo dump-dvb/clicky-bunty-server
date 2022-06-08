@@ -4,7 +4,7 @@ mod structs;
 
 pub use database::{DataBaseConnection, Region, Role, Station, User};
 use endpoints::{
-    approve_station, create_region, create_station, create_user, delete_region, delete_station,
+    approve_station, create_region, create_station, create_user, list_users, delete_region, delete_station,
     delete_user, generate_token, get_session, list_regions, list_stations, login, modify_region,
     modify_station, modify_user, Body,
 };
@@ -101,7 +101,7 @@ fn process_message(connection: &mut UserConnection, message: &tungstenite::proto
             modify_user(connection, parsed_struct);
         }
         ("user/list", Body::Empty, true) => {
-
+            list_users(connection);
         }
         ("station/create", Body::CreateStation(parsed_struct), true) => {
             create_station(connection, parsed_struct);

@@ -9,7 +9,8 @@ pub use station::{
     ApproveStation, CreateStationRequest, ListStationsRequest, ModifyStation,
 };
 pub use user::{
-    create_user, delete_user, get_session, login, modify_user, LoginRequest, ModifyUserRequest,
+    create_user, delete_user, get_session, login, modify_user, list_users,
+    LoginRequest, ModifyUserRequest,
     RegisterUserRequest, UserIdentifierRequest,
 };
 
