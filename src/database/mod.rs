@@ -272,6 +272,7 @@ impl DataBaseConnection {
             .query("SELECT 1 FROM users WHERE name=$1", &[name])
         {
             Ok(data) => {
+                println!("Users exists: {}", data.len());
                 data.len() > 0
             },
             Err(e) => {
