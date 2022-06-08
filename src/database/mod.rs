@@ -144,7 +144,7 @@ impl DataBaseConnection {
                   )",
                 &[],
         ) {
-            Err(_) => {println!("Did not create table user maybe it already exists!")},
+            Err(_) => {println!("Did not create table user maybe it already exists!"); },
             _ => {}
         }
 
@@ -159,7 +159,7 @@ impl DataBaseConnection {
                   )",
                 &[],
         ) {
-            Err(_) => {println!("Did not create table regions maybe it already exists!")},
+            Err(_) => {println!("Did not create table regions maybe it already exists!"); },
             _ => {}
         }
 
@@ -177,8 +177,8 @@ impl DataBaseConnection {
                   )",
                 &[],
         ) {
-            Err(_) => {println!("Did not create table stations maybe it already exists!")},
-            _ => {}
+            Err(_) => {println!("Did not create table stations maybe it already exists!");},
+            _ => { }
         }
     }
 
@@ -216,20 +216,22 @@ impl DataBaseConnection {
             _ => None,
         }
     }
+
     pub  fn query_user(&mut self, name: &String) -> Option<User> {
         match self.postgres.query_one(
             "SELECT id, name, email, password, role FROM users WHERE name=$1",
             &[&name],
         ) {
             Ok(data) => {
-                let user_id: Uuid = data.get::<>(0);
+                let user_id: Uuid = data.get(0);
+                let role: i32 = data.get(4);
                 println!("data: {:?}", data);
                 Some(User {
                     id: user_id,
                     name: data.get(1),
                     email: data.get(2),
                     password: data.get(3),
-                    role: Role::from(data.get(4)),
+                    role: Role::from(role as u32),
                 })
             },
             Err(e) => {
