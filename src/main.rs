@@ -30,7 +30,7 @@ use std::net::TcpListener;
 #[derive(Deserialize, Serialize)]
 struct MessageTemplate {
     operation: String,
-    body: Body,
+    body: Option<Body>,
 }
 
 #[derive(Serialize)]
@@ -68,7 +68,14 @@ fn process_message(connection: &mut UserConnection, message: &tungstenite::proto
                 }
             }
             command = parsed.operation;
-            body = parsed.body;
+            match parsed.body {
+                Some(body_found) => {
+                    body = body_found;
+                }
+                _ => {
+                    body = Body::Empty;
+                }
+            }
         }
         _ => {
             return;

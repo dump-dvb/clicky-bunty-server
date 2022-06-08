@@ -60,6 +60,8 @@ pub fn create_user(connection: &mut UserConnection, request: RegisterUserRequest
             .socket
             .write_message(tungstenite::Message::Text(serialized))
             .unwrap();
+
+        return;
     }
 
     let email_regex = Regex::new(
