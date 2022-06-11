@@ -323,12 +323,12 @@ impl DataBaseConnection {
         match results {
             Ok(data) => {
                 for row in data {
-                    //let station_id: Uuid = Uuid::parse_str(row.get(0)).unwrap();
+                    let station_id: Uuid = row.get(0);
                     let region: i32 = row.get(4);
                     let owner: Uuid = row.get(5);
 
                     station_list.push(Station {
-                        id: row.get(0),
+                        id: station_id,
                         token: None,
                         name: row.get(1),
                         lat: row.get(2),
