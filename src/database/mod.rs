@@ -445,7 +445,7 @@ impl DataBaseConnection {
             "INSERT INTO stations (id, token, name, lat, lon, region, owner, approved) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
             &[
                 &station.id,
-                &(station.token.as_ref().unwrap()),
+                &station.token,
                 &station.name,
                 &station.lat,
                 &station.lon,
