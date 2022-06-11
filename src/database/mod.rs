@@ -442,8 +442,9 @@ impl DataBaseConnection {
 
     pub  fn create_station(&mut self, station: &Station) -> bool {
         match self.postgres.execute(
-            "INSERT INTO stations (token, name, lat, lon, region, owner, approved) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+            "INSERT INTO stations (id, token, name, lat, lon, region, owner, approved) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
             &[
+                &station.id,
                 &(station.token.as_ref().unwrap()),
                 &station.name,
                 &station.lat,
