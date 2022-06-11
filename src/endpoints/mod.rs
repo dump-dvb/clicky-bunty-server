@@ -11,7 +11,7 @@ pub use station::{
 pub use user::{
     create_user, delete_user, get_session, login, modify_user, list_users,
     LoginRequest, ModifyUserRequest,
-    RegisterUserRequest, UserIdentifierRequest,
+    RegisterUserRequest, UuidRequest,
 };
 
 pub use region::{
@@ -32,7 +32,7 @@ pub enum Body {
     Register(RegisterUserRequest),
     Login(LoginRequest),
     UserModify(ModifyUserRequest),
-    UserIdentifier(UserIdentifierRequest),
+    UuidIdentifier(UuidRequest),
 
     CreateStation(CreateStationRequest),
     ModifyStation(ModifyStation),

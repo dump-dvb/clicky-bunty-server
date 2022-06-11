@@ -57,8 +57,8 @@ pub struct Region {
 }
 
 pub struct Station {
+    pub id: Uuid,
     pub token: Option<String>,
-    pub id: u32,
     pub name: String,
     pub lat: f64,
     pub lon: f64,
@@ -166,7 +166,7 @@ impl DataBaseConnection {
         match self.postgres
             .execute(
                 "CREATE TABLE stations (
-                    id              SERIAL PRIMARY KEY,
+                    id              UUID PRIMARY KEY,
                     token           VARCHAR(32),
                     name            TEXT NOT NULL,
                     lat             DOUBLE PRECISION NOT NULL,
@@ -182,14 +182,14 @@ impl DataBaseConnection {
         }
     }
 
-    pub  fn query_station(&mut self, token: &u32) -> Option<Station> {
+    pub  fn query_station(&mut self, token: &Uuid) -> Option<Station> {
         match self.postgres.query_one(
             "SELECT token, id, name, lat, lon, region, owner, approved FROM stations WHERE id=$1",
             &[&token],
         ) {
             Ok(data) => Some(Station {
                 token: Some(data.get(0)),
-                id: data.get(1),
+                id: Uuid::parse_str(data.get(1)).unwrap(),
                 name: data.get(2),
                 lat: data.get(3),
                 lon: data.get(4),
@@ -241,7 +241,7 @@ impl DataBaseConnection {
         }
     }
 
-    pub  fn query_user_by_id(&mut self, id: &String) -> Option<User> {
+    pub  fn query_user_by_id(&mut self, id: &Uuid) -> Option<User> {
         match self.postgres.query_one(
             "SELECT id, name, email, password FROM users WHERE id=$1",
             &[id],
@@ -323,12 +323,12 @@ impl DataBaseConnection {
         match results {
             Ok(data) => {
                 for row in data {
-                    let station_id: i32 = row.get(0);
+                    let station_id: Uuid = Uuid::parse_str(row.get(0)).unwrap();
                     let region: i32 = row.get(4);
                     let owner: Uuid = row.get(5);
 
                     station_list.push(Station {
-                        id: station_id as u32,
+                        id: station_id,
                         token: None,
                         name: row.get(1),
                         lat: row.get(2),
@@ -468,7 +468,7 @@ impl DataBaseConnection {
         }
     }
 
-    pub  fn is_administrator(&mut self, uid: &String) -> bool {
+    pub  fn is_administrator(&mut self, uid: &Uuid) -> bool {
         match self
             .postgres
             .query_one("SELECT role FROM users WHERE id=$1", &[uid])
@@ -478,14 +478,14 @@ impl DataBaseConnection {
         }
     }
 
-    pub  fn get_owner_from_station(&mut self, region_id: &u32) -> Option<Uuid> {
-        match self.query_station(region_id){
+    pub  fn get_owner_from_station(&mut self, station_id: &Uuid) -> Option<Uuid> {
+        match self.query_station(station_id){
             Some(region) => Some(region.owner),
             _ => None,
         }
     }
 
-    pub  fn delete_user(&mut self, uid: &String) -> bool {
+    pub  fn delete_user(&mut self, uid: &Uuid) -> bool {
         self.postgres
             .execute("DELETE FROM users WHERE id=$1", &[uid])
             .is_ok()
@@ -497,7 +497,7 @@ impl DataBaseConnection {
             .is_ok()
     }
 
-    pub  fn delete_station(&mut self, id: &u32) -> bool {
+    pub  fn delete_station(&mut self, id: &Uuid) -> bool {
         self.postgres
             .execute("DELETE FROM users WHERE id=$1", &[id])
             .is_ok()
@@ -547,7 +547,7 @@ impl DataBaseConnection {
             .is_ok()
     }
 
-    pub fn set_token(&mut self, id: &u32, token: &String) -> bool {
+    pub fn set_token(&mut self, id: &Uuid, token: &String) -> bool {
         self.postgres
             .execute("UPDATE station SET token=$1 WHERE id=$2", &[token, id])
             .is_ok()

@@ -96,7 +96,7 @@ fn process_message(connection: &mut UserConnection, message: &tungstenite::proto
         ("user/session", Body::Empty, true) => {
             get_session(connection);
         }
-        ("user/delete", Body::UserIdentifier(parsed_struct), true) => {
+        ("user/delete", Body::UuidIdentifier(parsed_struct), true) => {
             delete_user(connection, parsed_struct);
         }
         ("user/modify", Body::UserModify(parsed_struct), true) => {
@@ -114,7 +114,7 @@ fn process_message(connection: &mut UserConnection, message: &tungstenite::proto
         ("station/list", Body::Empty, _) => {
             list_stations(connection, ListStationsRequest { desired_owner: None, desired_region: None});
         }
-        ("station/delete", Body::Identifier(parsed_struct), true) => {
+        ("station/delete", Body::UuidIdentifier(parsed_struct), true) => {
             delete_station(connection, parsed_struct);
         }
         ("station/modify", Body::ModifyStation(parsed_struct), true) => {
@@ -123,7 +123,7 @@ fn process_message(connection: &mut UserConnection, message: &tungstenite::proto
         ("station/approve", Body::ApproveStation(parsed_struct), true) => {
             approve_station(connection, parsed_struct);
         }
-        ("station/generate_token", Body::Identifier(parsed_struct), true) => {
+        ("station/generate_token", Body::UuidIdentifier(parsed_struct), true) => {
             generate_token(connection, parsed_struct);
         }
         ("region/create", Body::CreateRegion(parsed_struct), true) => {

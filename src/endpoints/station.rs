@@ -1,6 +1,7 @@
-use super::{IdentifierRequest, ServiceResponse, Station, UserConnection};
+use super::{UuidRequest, ServiceResponse, Station, UserConnection};
 use rand::{distributions::Alphanumeric, Rng};
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct CreateStationRequest {
@@ -18,7 +19,7 @@ pub struct ListStationsRequest {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ModifyStation {
-    pub id: u32,
+    pub id: Uuid,
     pub name: Option<String>,
     pub lat: Option<f64>,
     pub lon: Option<f64>,
@@ -31,7 +32,7 @@ pub struct ApproveStation {
     pub approved: bool,
 }
 
-fn owns_station(connection: &mut UserConnection, station_id: &u32) -> bool {
+fn owns_station(connection: &mut UserConnection, station_id: &Uuid) -> bool {
     let result_station = connection
         .database
         .lock()
@@ -63,7 +64,7 @@ pub fn create_station(connection: &mut UserConnection, request: CreateStationReq
 
         let station = Station {
             token: Some(random_token),
-            id: 0,
+            id: Uuid::new_v4(),
             name: request.name,
             lat: request.lat,
             lon: request.lon,
@@ -102,7 +103,7 @@ pub fn list_stations(connection: &mut UserConnection, request: ListStationsReque
         .unwrap();
 }
 
-pub fn delete_station(connection: &mut UserConnection, request: IdentifierRequest) {
+pub fn delete_station(connection: &mut UserConnection, request: UuidRequest) {
     let mut result_query = false;
     if connection.user.as_ref().unwrap().is_admin() || owns_station(connection, &request.id) {
         result_query = connection
@@ -162,7 +163,7 @@ pub fn approve_station(connection: &mut UserConnection, request: ApproveStation)
     }
 }
 
-pub fn generate_token(connection: &mut UserConnection, request: IdentifierRequest) {
+pub fn generate_token(connection: &mut UserConnection, request: UuidRequest) {
     if connection.user.as_ref().unwrap().is_admin() || owns_station(connection, &request.id) {
         let random_token: String = rand::thread_rng()
             .sample_iter(&Alphanumeric)

@@ -24,7 +24,7 @@ pub struct LoginRequest {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ModifyUserRequest {
-    pub id: String,
+    pub id: Uuid,
     pub name: Option<String>,
     pub email: Option<String>,
     pub password: Option<String>,
@@ -32,8 +32,8 @@ pub struct ModifyUserRequest {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct UserIdentifierRequest {
-    pub id: String,
+pub struct UuidRequest {
+    pub id: Uuid,
 }
 
 fn hash_password(password: &String) -> String {
@@ -136,8 +136,8 @@ pub fn login(connection: &mut UserConnection, request: LoginRequest) {
 }
 
 pub fn get_session(connection: &mut UserConnection) {
-    let serialized = serde_json::to_string(&UserIdentifierRequest {
-        id: connection.user.as_ref().unwrap().id.to_string(),
+    let serialized = serde_json::to_string(&UuidRequest {
+        id: connection.user.as_ref().unwrap().id,
     }).unwrap();
     connection
         .socket
@@ -145,8 +145,8 @@ pub fn get_session(connection: &mut UserConnection) {
         .unwrap();
 }
 
-pub fn delete_user(connection: &mut UserConnection, delete_request: UserIdentifierRequest) {
-    let user_id = connection.user.as_ref().unwrap().id.to_string();
+pub fn delete_user(connection: &mut UserConnection, delete_request: UuidRequest) {
+    let user_id = connection.user.as_ref().unwrap().id;
 
     if connection
         .database
@@ -181,7 +181,7 @@ pub fn modify_user(connection: &mut UserConnection, modify_request: ModifyUserRe
     }
 
     let user_struct = user_struct_result.unwrap();
-    let user_id = connection.user.as_ref().unwrap().id.to_string();
+    let user_id = connection.user.as_ref().unwrap().id;
     let admin = connection
         .database
         .lock()
@@ -211,7 +211,7 @@ pub fn modify_user(connection: &mut UserConnection, modify_request: ModifyUserRe
         }
 
         connection.database.lock().unwrap().update_user(&User {
-            id: Uuid::parse_str(&modify_request.id).unwrap(),
+            id: modify_request.id,
             name: modify_request.name.clone().unwrap_or(user_struct.name),
             email: modify_request.email.clone().unwrap_or(user_struct.email),
             password: hashed_password,

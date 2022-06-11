@@ -84,7 +84,7 @@ list_stations = {
 list_stations = {
     "operation": "station/list",
     "body": {
-        "desired_region": 0
+        #"desired_region": 1
     }
 }
 
