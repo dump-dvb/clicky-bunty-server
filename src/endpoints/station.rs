@@ -28,7 +28,7 @@ pub struct ModifyStation {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ApproveStation {
-    pub id: u32,
+    pub id: Uuid,
     pub approved: bool,
 }
 
