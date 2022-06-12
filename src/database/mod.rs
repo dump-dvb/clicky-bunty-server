@@ -539,7 +539,7 @@ impl DataBaseConnection {
                               &[&region.name, &region.transport_company, &(region.frequency as i64), &region.protocol, &(region.id as i64)]).is_ok()
     }
 
-    pub fn set_approved(&mut self, id: &u32, approved: bool) -> bool {
+    pub fn set_approved(&mut self, id: &Uuid, approved: bool) -> bool {
         self.postgres
             .execute(
                 "UPDATE station SET approved=$1 WHERE id=$2",
