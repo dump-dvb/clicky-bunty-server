@@ -540,12 +540,20 @@ impl DataBaseConnection {
     }
 
     pub fn set_approved(&mut self, id: &Uuid, approved: bool) -> bool {
-        self.postgres
+        match self.postgres
             .execute(
                 "UPDATE station SET approved=$1 WHERE id=$2",
                 &[&approved, id],
-            )
-            .is_ok()
+            ) {
+            Ok(data) => {
+                println!("Approve: {:?}", data);
+                true
+            }
+            Err(e) => {
+                println!("Approve: {:?}", e);
+                false
+            }
+        }
     }
 
     pub fn set_token(&mut self, id: &Uuid, token: &String) -> bool {
