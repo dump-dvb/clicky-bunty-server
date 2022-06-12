@@ -25,26 +25,6 @@ pub struct IdentifierRequest {
     pub id: u32,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-#[serde(untagged)]
-pub enum Body {
-    Empty,
-    Register(RegisterUserRequest),
-    Login(LoginRequest),
-    UserModify(ModifyUserRequest),
-    UuidIdentifier(UuidRequest),
-
-    CreateStation(CreateStationRequest),
-    ModifyStation(ModifyStation),
-    ApproveStation(ApproveStation),
-
-    CreateRegion(RegionRequest),
-    ModifyRegion(ModifyRegionRequest),
-
-    Identifier(IdentifierRequest),
-    ListStations(ListStationsRequest),
-}
-
 #[derive(Serialize)]
 pub struct ServiceResponse {
     success: bool,

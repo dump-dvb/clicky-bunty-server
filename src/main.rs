@@ -6,10 +6,11 @@ pub use database::{DataBaseConnection, Region, Role, Station, User};
 use endpoints::{
     approve_station, create_region, create_station, create_user, list_users, delete_region, delete_station,
     delete_user, generate_token, get_session, list_regions, list_stations, login, modify_region,
-    modify_station, modify_user, Body, ListStationsRequest
+    modify_station, modify_user, ListStationsRequest, ApproveStation, CreateStationRequest, UuidRequest, RegisterUserRequest, LoginRequest, ModifyUserRequest, ModifyRegionRequest, RegionRequest, ModifyStation, IdentifierRequest
 };
 use structs::Args;
 
+use serde::de::DeserializeOwned;
 use clap::Parser;
 use serde::{Deserialize, Serialize};
 use serde_json;
@@ -30,12 +31,13 @@ use std::net::TcpListener;
 #[derive(Deserialize, Serialize)]
 struct MessageTemplate {
     operation: String,
-    body: Option<Body>,
+    body: Option<serde_json::Value>,
 }
 
 #[derive(Serialize)]
 pub struct ServiceResponse {
     success: bool,
+    message: Option<String>
 }
 
 pub struct UserConnection {
@@ -44,9 +46,25 @@ pub struct UserConnection {
     user: Option<User>,
 }
 
+fn call_backend<T: DeserializeOwned>(data: serde_json::Value, function: Box<dyn Fn(&mut UserConnection, T)>, connection: &mut UserConnection) 
+{
+    match serde_json::value::from_value::<T>(data) {
+        Ok(parsed_struct) => {
+            function(connection, parsed_struct);
+        }
+        _ => {
+            let serialized = serde_json::to_string(&ServiceResponse { success: false , message: Some(String::from("decoding failed"))}).unwrap();
+            connection
+                .socket
+                .write_message(tungstenite::Message::Text(serialized))
+                .unwrap();
+        }
+    }
+}
+
 fn process_message(connection: &mut UserConnection, message: &tungstenite::protocol::Message) {
     let command: String;
-    let body: Body;
+    let raw_body: Option<serde_json::Value>;
 
     match message {
         tungstenite::protocol::Message::Text(text) => {
@@ -58,7 +76,7 @@ fn process_message(connection: &mut UserConnection, message: &tungstenite::proto
                 Err(e) => {
                     println!("user send incorrect message {:?}", e);
                     let serialized =
-                        serde_json::to_string(&ServiceResponse { success: false }).unwrap();
+                        serde_json::to_string(&ServiceResponse { success: false, message: Some(String::from("operation entry is missing")) }).unwrap();
                     connection
                         .socket
                         .write_message(tungstenite::Message::Text(serialized))
@@ -68,14 +86,7 @@ fn process_message(connection: &mut UserConnection, message: &tungstenite::proto
                 }
             }
             command = parsed.operation;
-            match parsed.body {
-                Some(body_found) => {
-                    body = body_found;
-                }
-                _ => {
-                    body = Body::Empty;
-                }
-            }
+            raw_body = parsed.body;
         }
         _ => {
             return;
@@ -84,59 +95,58 @@ fn process_message(connection: &mut UserConnection, message: &tungstenite::proto
 
     let authenticated = connection.user.is_some();
 
-    println!("command: {}, body: {:?}, authenticated: {}", &command.as_str(), &body, authenticated);
+    println!("command: {}, body: {:?}, authenticated: {}", &command.as_str(), &raw_body, authenticated);
 
-    match (command.as_str(), body, authenticated) {
-        ("user/register", Body::Register(parsed_struct), false) => {
-            create_user(connection, parsed_struct);
+    match (command.as_str(), raw_body, authenticated) {
+        ("user/register", Some(body), false) => {
+            call_backend::<RegisterUserRequest>(body, Box::new(create_user), connection);
         }
-        ("user/login", Body::Login(parsed_struct), false) => {
-            login(connection, parsed_struct);
+        ("user/login", Some(body), false) => {
+            call_backend::<LoginRequest>(body, Box::new(login), connection);
         }
-        ("user/session", Body::Empty, true) => {
+        ("user/session", None, true) => {
             get_session(connection);
         }
-        ("user/delete", Body::UuidIdentifier(parsed_struct), true) => {
-            delete_user(connection, parsed_struct);
+        ("user/delete", Some(body), true) => {
+            call_backend::<UuidRequest>(body, Box::new(delete_user), connection);
         }
-        ("user/modify", Body::UserModify(parsed_struct), true) => {
-            modify_user(connection, parsed_struct);
+        ("user/modify", Some(body), true) => {
+            call_backend::<ModifyUserRequest>(body, Box::new(modify_user), connection);
         }
-        ("user/list", Body::Empty, true) => {
+        ("user/list", None, true) => {
             list_users(connection);
         }
-        ("station/create", Body::CreateStation(parsed_struct), true) => {
-            create_station(connection, parsed_struct);
+        ("station/create", Some(body), true) => {
+            call_backend::<CreateStationRequest>(body, Box::new(create_station), connection);
         }
-        ("station/list", Body::ListStations(parsed_struct), _) => {
-            list_stations(connection, parsed_struct);
+        ("station/list", Some(body), _) => {
+            call_backend::<ListStationsRequest>(body, Box::new(list_stations), connection);
         }
-        ("station/list", Body::Empty, _) => {
+        ("station/list", None, _) => {
             list_stations(connection, ListStationsRequest { desired_owner: None, desired_region: None});
         }
-        ("station/delete", Body::UuidIdentifier(parsed_struct), true) => {
-            delete_station(connection, parsed_struct);
+        ("station/delete", Some(body), true) => {
+            call_backend::<UuidRequest>(body, Box::new(delete_station), connection);
         }
-        ("station/modify", Body::ModifyStation(parsed_struct), true) => {
-            modify_station(connection, parsed_struct);
+        ("station/modify", Some(body), true) => {
+            call_backend::<ModifyStation>(body, Box::new(modify_station), connection);
         }
-        ("station/approve", Body::ApproveStation(parsed_struct), true) => {
-            approve_station(connection, parsed_struct);
+        ("station/approve", Some(body), true) => {
+            call_backend::<ApproveStation>(body, Box::new(approve_station), connection);
         }
-        ("station/generate_token", Body::UuidIdentifier(parsed_struct), true) => {
-            generate_token(connection, parsed_struct);
+        ("station/generate_token", Some(body), true) => {
+            call_backend::<UuidRequest>(body, Box::new(generate_token), connection);
         }
-        ("region/create", Body::CreateRegion(parsed_struct), true) => {
-            println!("Region Request");
-            create_region(connection, parsed_struct);
+        ("region/create", Some(body), true) => {
+            call_backend::<RegionRequest>(body, Box::new(create_region), connection);
         }
-        ("region/delete", Body::Identifier(parsed_struct), true) => {
-            delete_region(connection, parsed_struct);
+        ("region/delete", Some(body), true) => {
+            call_backend::<IdentifierRequest>(body, Box::new(delete_region), connection);
         }
-        ("region/modify", Body::ModifyRegion(parsed_struct), true) => {
-            modify_region(connection, parsed_struct);
+        ("region/modify", Some(body), true) => {
+            call_backend::<ModifyRegionRequest>(body, Box::new(modify_region), connection);
         }
-        ("region/list", Body::Empty, _) => {
+        ("region/list", None, _) => {
             list_regions(connection);
         }
         (&_, _, _) => {}

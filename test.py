@@ -88,6 +88,14 @@ list_stations = {
     }
 }
 
+approve_station = {
+    "operation": "station/approve",
+    "body": {
+        "id": "",
+        "approved": True 
+    }
+}
+
 async def hello(uri):
     async with connect(uri) as websocket:
         print("Request!")
@@ -112,7 +120,10 @@ async def hello(uri):
         await websocket.send(json.dumps(create_station))
         print(await websocket.recv())
         await websocket.send(json.dumps(list_stations))
+        station_list = json.loads(await websocket.recv())
+        print(station_list[0])
+        approve_station["body"]["id"] = station_list[0]["id"]
+        await websocket.send(json.dumps(approve_station))
         print(await websocket.recv())
-
 
 asyncio.run(hello("wss://management-backend.staging.dvb.solutions"))
