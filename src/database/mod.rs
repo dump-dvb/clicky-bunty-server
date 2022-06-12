@@ -522,7 +522,7 @@ impl DataBaseConnection {
     pub  fn update_station(&mut self, station: &Station) -> bool {
         self.postgres
             .execute(
-                "UPDATE station SET name=$1, lat=$2, lon=$3, region=$4 WHERE id=$5",
+                "UPDATE stations SET name=$1, lat=$2, lon=$3, region=$4 WHERE id=$5",
                 &[
                     &station.name,
                     &station.lat,
@@ -542,7 +542,7 @@ impl DataBaseConnection {
     pub fn set_approved(&mut self, id: &Uuid, approved: bool) -> bool {
         match self.postgres
             .execute(
-                "UPDATE station SET approved=$1 WHERE id=$2",
+                "UPDATE stations SET approved=$1 WHERE id=$2",
                 &[&approved, id],
             ) {
             Ok(data) => {
@@ -558,7 +558,7 @@ impl DataBaseConnection {
 
     pub fn set_token(&mut self, id: &Uuid, token: &String) -> bool {
         self.postgres
-            .execute("UPDATE station SET token=$1 WHERE id=$2", &[token, id])
+            .execute("UPDATE stations SET token=$1 WHERE id=$2", &[token, id])
             .is_ok()
     }
 }
