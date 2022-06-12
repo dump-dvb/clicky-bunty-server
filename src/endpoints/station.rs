@@ -32,6 +32,18 @@ pub struct ApproveStation {
     pub approved: bool,
 }
 
+fn write_result(response: bool, connection: &mut UserConnection) {
+    let serialized = serde_json::to_string(&ServiceResponse {
+        success: response,
+    }).unwrap();
+
+    connection
+        .socket
+        .write_message(tungstenite::Message::Text(serialized))
+        .unwrap();
+}
+
+
 fn owns_station(connection: &mut UserConnection, station_id: &Uuid) -> bool {
     let result_station = connection
         .database
@@ -74,18 +86,10 @@ pub fn create_station(connection: &mut UserConnection, request: CreateStationReq
         };
 
         let result = connection.database.lock().unwrap().create_station(&station);
+        write_result(result, connection);
 
-        let serialized = serde_json::to_string(&ServiceResponse { success: result }).unwrap();
-        connection
-            .socket
-            .write_message(tungstenite::Message::Text(serialized))
-            .unwrap();
     } else {
-        let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
-        connection
-            .socket
-            .write_message(tungstenite::Message::Text(serialized))
-            .unwrap();
+        write_result(false, connection);
     }
 }
 
@@ -95,7 +99,7 @@ pub fn list_stations(connection: &mut UserConnection, request: ListStationsReque
         .lock()
         .unwrap()
         .list_stations(request.desired_owner, request.desired_region);
-
+    
     let serialized = serde_json::to_string(&data).unwrap();
     connection
         .socket
@@ -112,14 +116,8 @@ pub fn delete_station(connection: &mut UserConnection, request: UuidRequest) {
             .unwrap()
             .delete_station(&request.id);
     }
-    let serialized = serde_json::to_string(&ServiceResponse {
-        success: result_query,
-    })
-    .unwrap();
-    connection
-        .socket
-        .write_message(tungstenite::Message::Text(serialized))
-        .unwrap();
+
+    write_result(result_query, connection);
 }
 
 pub fn modify_station(connection: &mut UserConnection, request: ModifyStation) {
@@ -130,13 +128,13 @@ pub fn modify_station(connection: &mut UserConnection, request: ModifyStation) {
         .query_station(&request.id);
 
     if result_station.as_ref().is_none() {
+        write_result(false, connection);
         return;
     }
 
     let station = result_station.unwrap();
-
     if connection.user.as_ref().unwrap().is_admin() || owns_station(connection, &request.id) {
-        connection
+        let response = connection
             .database
             .lock()
             .unwrap()
@@ -150,16 +148,22 @@ pub fn modify_station(connection: &mut UserConnection, request: ModifyStation) {
                 token: None,
                 owner: station.owner,
             });
+        write_result(response, connection);
+    } else {
+        write_result(false, connection);
     }
 }
 
 pub fn approve_station(connection: &mut UserConnection, request: ApproveStation) {
     if connection.user.as_ref().unwrap().is_admin() {
-        connection
+        let response = connection
             .database
             .lock()
             .unwrap()
             .set_approved(&request.id, request.approved);
+        write_result(response, connection);
+    } else {
+        write_result(false, connection);
     }
 }
 
@@ -171,10 +175,14 @@ pub fn generate_token(connection: &mut UserConnection, request: UuidRequest) {
             .map(char::from)
             .collect();
 
-        connection
+        let response = connection
             .database
             .lock()
             .unwrap()
             .set_token(&request.id, &random_token);
+
+        write_result(response, connection);
+    } else {
+        write_result(false, connection);
     }
 }
