@@ -36,6 +36,13 @@ pub struct UuidRequest {
     pub id: Uuid,
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+pub struct UuidResponse {
+    pub id: Uuid,
+    pub success: bool
+}
+
+
 fn hash_password(password: &String) -> String {
     let default_salt_path = String::from("/run/secrets/clicky_bunty_salt");
     let salt_path = std::env::var("SALT_PATH").unwrap_or(default_salt_path);
@@ -91,7 +98,7 @@ pub fn create_user(connection: &mut UserConnection, request: RegisterUserRequest
 
     let result = connection.database.lock().unwrap().create_user(&user);
 
-    let serialized = serde_json::to_string(&ServiceResponse { success: result }).unwrap();
+    let serialized = serde_json::to_string(&UuidResponse { id: user.id, success: result }).unwrap();
     connection
         .socket
         .write_message(tungstenite::Message::Text(serialized))
@@ -110,9 +117,9 @@ pub fn login(connection: &mut UserConnection, request: LoginRequest) {
             let password_hash = PasswordHash::parse(&user.password, Encoding::B64).unwrap();
             match Pbkdf2.verify_password(request.password.as_bytes(), &password_hash) {
                 Ok(_) => {
-                    connection.user = Some(user);
+                    connection.user = Some(user.clone());
                     let serialized =
-                        serde_json::to_string(&ServiceResponse { success: true }).unwrap();
+                        serde_json::to_string(&UuidResponse { id: user.id, success: true }).unwrap();
                     connection
                         .socket
                         .write_message(tungstenite::Message::Text(serialized))

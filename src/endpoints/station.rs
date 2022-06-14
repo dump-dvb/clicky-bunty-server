@@ -32,6 +32,12 @@ pub struct ApproveStation {
     pub approved: bool,
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+pub struct UuidResponse {
+    pub id: Uuid,
+    pub success: bool,
+}
+
 fn write_result(response: bool, connection: &mut UserConnection) {
     let serialized = serde_json::to_string(&ServiceResponse {
         success: response,
@@ -86,7 +92,15 @@ pub fn create_station(connection: &mut UserConnection, request: CreateStationReq
         };
 
         let result = connection.database.lock().unwrap().create_station(&station);
-        write_result(result, connection);
+        let serialized = serde_json::to_string(&UuidResponse {
+            success: true,
+            id: station.id
+        }).unwrap();
+
+        connection
+            .socket
+            .write_message(tungstenite::Message::Text(serialized))
+            .unwrap();
 
     } else {
         write_result(false, connection);
