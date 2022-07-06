@@ -30,15 +30,18 @@
         in
         rec {
           checks = {
-            test-clicky-bunty = pkgs.callPackage ./tests.nix {};
-          }; 
-          packages.clicky-bunty-server = package;
-          defaultPackage = package;
-          overlay = (final: prev: {
+            test-clicky-bunty = pkgs.callPackage ./tests.nix { };
+          };
+          packages = {
             clicky-bunty-server = package;
-          });
+            default = package;
+          };
         }
       ) // {
+      overlays.default = final: prev: {
+        inherit (self.packages.${prev.system})
+          clicky-bunty-server;
+      };
       hydraJobs =
         let
           hydraSystems = [
