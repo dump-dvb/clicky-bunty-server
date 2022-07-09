@@ -1,6 +1,10 @@
-extern crate postgres;
+mod models;
 
-use postgres::{Client, NoTls, config::SslMode };
+use models::{Region, Role, Station, User};
+
+use diesel::pg::PgConnection;
+use diesel::prelude::*;
+
 use serde::ser::{SerializeStruct, Serializer};
 use serde::{Deserialize, Serialize};
 use std::clone::Clone;
@@ -8,99 +12,8 @@ use std::cmp::PartialEq;
 use std::env;
 use uuid::Uuid;
 
-#[derive(Clone, Serialize, Deserialize, PartialEq, Debug)]
-pub enum Role {
-    User = 6,
-    Administrator = 0,
-}
-
-
-impl Role {
-    pub fn from(role: u32) -> Role {
-        match role {
-            0 => Role::Administrator,
-            _ => Role::User,
-        }
-    }
-
-    pub fn as_int(&self) -> u32 {
-        match self {
-            Role::Administrator => 0,
-            _ => 6,
-        }
-    }
-}
-
-
-#[derive(Debug, Clone)]
-pub struct User {
-    pub id: Uuid,
-    pub name: String,
-    pub email: String,
-    pub password: String,
-    pub role: Role,
-}
-
-impl User {
-    pub fn is_admin(&self) -> bool {
-        self.role == Role::Administrator
-    }
-}
-
-#[derive(Serialize, Debug)]
-pub struct Region {
-    pub id: u32,
-    pub name: String,
-    pub transport_company: String,
-    pub frequency: u64,
-    pub protocol: String,
-}
-
-pub struct Station {
-    pub id: Uuid,
-    pub token: Option<String>,
-    pub name: String,
-    pub lat: f64,
-    pub lon: f64,
-    pub region: u32,
-    pub owner: Uuid,
-    pub approved: bool,
-}
-
 pub struct DataBaseConnection {
-    postgres: Client,
-}
-
-impl Serialize for User {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut s = serializer.serialize_struct("User", 4)?;
-        s.serialize_field("id", &self.id.to_string())?;
-        s.serialize_field("name", &self.name)?;
-        s.serialize_field("email", &self.email)?;
-        s.serialize_field("password", &self.password)?;
-        s.end()
-    }
-}
-
-impl Serialize for Station {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut s = serializer.serialize_struct("Station", 8).unwrap();
-        s.serialize_field("token", &self.token)?;
-        s.serialize_field("id", &self.id)?;
-        s.serialize_field("name", &self.name)?;
-        s.serialize_field("lat", &self.lat)?;
-        s.serialize_field("lon", &self.lon)?;
-        s.serialize_field("region", &self.region)?;
-        s.serialize_field("owner", &self.owner.to_string())?;
-        s.serialize_field("approved", &self.approved)?;
-        s.end()
-    }
+    postgres: PgConnection,
 }
 
 impl DataBaseConnection {
@@ -109,27 +22,16 @@ impl DataBaseConnection {
         let default_postgres_port = String::from("5432");
 
         let postgres_host = format!(
-            "posgresql://dvbdump:{}@{}:{}/dvbdump",
+            "postgres://dvbdump:{}@{}:{}/dvbdump",
             env::var("POSTGRES_PASSWORD").unwrap(),
             env::var("POSTGRES_HOST").unwrap_or(default_postgres_host.clone()),
             env::var("POSTGRES_PORT").unwrap_or(default_postgres_port.clone())
         );
 
-        println!("Connecting to Database at {}", postgres_host);
-        let mut database = DataBaseConnection {
-            postgres: Client::configure()
-                .user("dvbdump")
-                .password(env::var("POSTGRES_PASSWORD").unwrap())
-                .dbname("dvbdump")
-                .host(&env::var("POSTGRES_HOST").unwrap_or(default_postgres_host))
-                .port(env::var("POSTGRES_PORT").unwrap_or(default_postgres_port).parse::<u16>().unwrap())
-                .ssl_mode(SslMode::Disable)
-                .connect(NoTls).unwrap(),
-        };
-        println!("Creating Database Tables !");
-        database.create_tables();
-
-        return database;
+        DataBaseConnection {
+            connection: PgConnection::establish(&postgres_host)
+                .expect(&format!("Error connecting to {}", postgres_host)),
+        }
     }
 
     pub  fn create_tables(&mut self) {
@@ -349,13 +251,18 @@ impl DataBaseConnection {
 
     pub fn list_regions(&mut self) -> Vec<Region> {
         let mut results = Vec::new();
-        for row in self
+        for row in match self
             .postgres
             .query(
                 "SELECT id, name, transport_company, frequency, protocol FROM regions",
                 &[],
-            )
-            .unwrap()
+            ) {
+                Ok(data) => data,
+                Err(e) => {
+                    println!("Error: {:?}", e);
+                    Vec::new()
+                }
+            }
         {
             results.push(Region {
                 id: row.get::<usize, i32>(0) as u32,

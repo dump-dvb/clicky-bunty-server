@@ -1,6 +1,9 @@
+#[macro_use]
+extern crate diesel;
 mod database;
 mod endpoints;
 mod structs;
+mod schema;
 
 pub use database::{DataBaseConnection, Region, Role, Station, User};
 use endpoints::{
