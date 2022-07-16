@@ -41,6 +41,7 @@ pub struct UuidResponse {
 fn write_result(response: bool, connection: &mut UserConnection) {
     let serialized = serde_json::to_string(&ServiceResponse {
         success: response,
+        message: None
     }).unwrap();
 
     connection

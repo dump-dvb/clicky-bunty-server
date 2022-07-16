@@ -62,7 +62,7 @@ pub fn create_user(connection: &mut UserConnection, request: RegisterUserRequest
         .unwrap()
         .check_user_exists(&request.name)
     {
-        let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
+        let serialized = serde_json::to_string(&ServiceResponse { success: false, message: Some("name already taken".to_string()) }).unwrap();
         connection
             .socket
             .write_message(tungstenite::Message::Text(serialized))
@@ -135,7 +135,7 @@ pub fn login(connection: &mut UserConnection, request: LoginRequest) {
             println!("No user found ! {}", &request.name);
         }
     }
-    let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
+    let serialized = serde_json::to_string(&ServiceResponse { success: false, message: Some("could not login user name or password wrong".to_string()) }).unwrap();
     connection
         .socket
         .write_message(tungstenite::Message::Text(serialized))
@@ -168,7 +168,7 @@ pub fn delete_user(connection: &mut UserConnection, delete_request: UuidRequest)
             .unwrap()
             .delete_user(&delete_request.id);
     } else {
-        let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
+        let serialized = serde_json::to_string(&ServiceResponse { success: false, message: Some("you are not administrator or this user".to_string()) }).unwrap();
         connection
             .socket
             .write_message(tungstenite::Message::Text(serialized))
@@ -198,7 +198,7 @@ pub fn modify_user(connection: &mut UserConnection, modify_request: ModifyUserRe
     if admin || user_id == modify_request.id {
         if !admin && modify_request.role.is_some() {
             // only admins can change the role of a suer
-            let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
+            let serialized = serde_json::to_string(&ServiceResponse { success: false, message: Some("you are not administrator or this user".to_string()) }).unwrap();
             connection
                 .socket
                 .write_message(tungstenite::Message::Text(serialized))
@@ -225,7 +225,7 @@ pub fn modify_user(connection: &mut UserConnection, modify_request: ModifyUserRe
             role: modify_request.role.clone().unwrap_or(user_struct.role),
         });
     } else {
-        let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
+        let serialized = serde_json::to_string(&ServiceResponse { success: false, message: Some("you are not administrator or this user".to_string()) }).unwrap();
         connection
             .socket
             .write_message(tungstenite::Message::Text(serialized))
@@ -245,7 +245,7 @@ pub fn list_users(connection: &mut UserConnection) {
                 .unwrap();
 
     } else {
-        let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
+        let serialized = serde_json::to_string(&ServiceResponse { success: false, message: Some("you are not administrator".to_string()) }).unwrap();
         connection
             .socket
             .write_message(tungstenite::Message::Text(serialized))

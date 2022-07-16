@@ -23,8 +23,8 @@ fn admin(connection: &mut UserConnection) -> bool {
     connection.user.as_ref().unwrap().is_admin()
 }
 
-fn write_error(connection: &mut UserConnection) {
-    let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
+fn write_error(connection: &mut UserConnection, message: Option<String>) {
+    let serialized = serde_json::to_string(&ServiceResponse { success: false, message: message}).unwrap();
     connection
         .socket
         .write_message(tungstenite::Message::Text(serialized))
@@ -34,7 +34,7 @@ fn write_error(connection: &mut UserConnection) {
 pub fn create_region(connection: &mut UserConnection, request: RegionRequest) {
     println!("message: {}", admin(connection));
     if !admin(connection) {
-        write_error(connection);
+        write_error(connection, Some("you are not administrator".to_string()));
         return;
     }
 
@@ -47,7 +47,7 @@ pub fn create_region(connection: &mut UserConnection, request: RegionRequest) {
     });
 
 
-    let serialized = serde_json::to_string(&ServiceResponse { success: result }).unwrap();
+    let serialized = serde_json::to_string(&ServiceResponse { success: result, message: None }).unwrap();
     connection
         .socket
         .write_message(tungstenite::Message::Text(serialized))
@@ -56,7 +56,7 @@ pub fn create_region(connection: &mut UserConnection, request: RegionRequest) {
 
 pub fn modify_region(connection: &mut UserConnection, request: ModifyRegionRequest) {
     if !admin(connection) {
-        write_error(connection);
+        write_error(connection, Some("you are not administrator".to_string()));
         return;
     }
 
@@ -67,7 +67,7 @@ pub fn modify_region(connection: &mut UserConnection, request: ModifyRegionReque
         .query_region(&request.id);
 
     if result_region.is_none() {
-        write_error(connection);
+        write_error(connection, Some("this region does not exists".to_string()));
         return;
     }
 
@@ -82,7 +82,7 @@ pub fn modify_region(connection: &mut UserConnection, request: ModifyRegionReque
         frequency: request.frequency.unwrap_or(region.frequency),
         protocol: request.protocol.unwrap_or(region.protocol),
     });
-    let serialized = serde_json::to_string(&ServiceResponse { success: result }).unwrap();
+    let serialized = serde_json::to_string(&ServiceResponse { success: result, message: None }).unwrap();
     connection
         .socket
         .write_message(tungstenite::Message::Text(serialized))
@@ -91,7 +91,7 @@ pub fn modify_region(connection: &mut UserConnection, request: ModifyRegionReque
 
 pub fn delete_region(connection: &mut UserConnection, request: IdentifierRequest) {
     if !admin(connection) {
-        write_error(connection);
+        write_error(connection, Some("you are not administrator".to_string()));
         return;
     }
 
@@ -101,7 +101,7 @@ pub fn delete_region(connection: &mut UserConnection, request: IdentifierRequest
         .unwrap()
         .delete_region(&request.id);
 
-    let serialized = serde_json::to_string(&ServiceResponse { success: result }).unwrap();
+    let serialized = serde_json::to_string(&ServiceResponse { success: result, message: None }).unwrap();
     connection
         .socket
         .write_message(tungstenite::Message::Text(serialized))

@@ -28,4 +28,5 @@ pub struct IdentifierRequest {
 #[derive(Serialize)]
 pub struct ServiceResponse {
     success: bool,
+    message: Option<String>
 }
