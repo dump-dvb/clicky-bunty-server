@@ -149,7 +149,15 @@ fn process_message(connection: &mut UserConnection, message: &tungstenite::proto
         ("region/list", None, _) => {
             list_regions(connection);
         }
-        (&_, _, _) => {}
+        (&_, _, _) => {
+            println!("user send incorrect operation or unathenticated");
+            let serialized =
+                serde_json::to_string(&ServiceResponse { success: false, message: Some(String::from("unkown endpoint check if the operation is spelled correctly or if you are authenticated.")) }).unwrap();
+            connection
+                .socket
+                .write_message(tungstenite::Message::Text(serialized))
+                .unwrap();
+        }
     }
 }
 

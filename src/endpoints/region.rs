@@ -67,12 +67,7 @@ pub fn modify_region(connection: &mut UserConnection, request: ModifyRegionReque
         .query_region(&request.id);
 
     if result_region.is_none() {
-        let serialized = serde_json::to_string(&ServiceResponse { success: false }).unwrap();
-        connection
-            .socket
-            .write_message(tungstenite::Message::Text(serialized))
-            .unwrap();
-
+        write_error(connection);
         return;
     }
 
