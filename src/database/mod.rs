@@ -511,7 +511,7 @@ impl DataBaseConnection {
     }
 
     pub  fn update_user(&mut self, user: &User) -> bool {
-        self.postgres
+        match self.postgres
             .execute(
                 "UPDATE users SET name=$1, email=$2, password=$3, role=$4 WHERE id=$5",
                 &[
@@ -521,23 +521,33 @@ impl DataBaseConnection {
                     &user.role.as_int(),
                     &user.id.to_string(),
                 ],
-            )
-            .is_ok()
+            ) {
+                Err(e) => {
+                    println!("update users {:?}", e);
+                    false
+                }
+                _ => {true}
+            }
     }
 
     pub  fn update_station(&mut self, station: &Station) -> bool {
-        self.postgres
+        match self.postgres
             .execute(
                 "UPDATE stations SET name=$1, lat=$2, lon=$3, region=$4 WHERE id=$5",
                 &[
                     &station.name,
                     &station.lat,
                     &station.lon,
-                    &station.region,
+                    &(station.region as i32),
                     &station.id,
                 ],
-            )
-            .is_ok()
+            ) {
+            Err(e) => {
+                println!("update stations {:?}", e);
+                false
+            }
+            _ => {true}
+        }
     }
 
     pub  fn update_region(&mut self, region: &Region) -> bool {

@@ -75,7 +75,7 @@ modify_station = {
         "body":{
             "id":"2b4bfa9c-3768-43f4-b472-3a4828e251d6",
             "token":"",
-            "name":"Dresden Station Pieschen",
+            "name":"Dresden Cringe",
             "lat":0,
             "lon":2,
             "region":1,
