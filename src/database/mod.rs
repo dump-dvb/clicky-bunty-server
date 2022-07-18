@@ -207,7 +207,7 @@ impl DataBaseConnection {
     pub  fn query_region(&mut self, id: &u32) -> Option<Region> {
         match self.postgres.query_one(
             "SELECT id, name, transport_company, frequency, protocol FROM regions WHERE id=$1",
-            &[(id as i32)],
+            &[&(*id as i32)],
         ) {
             Ok(data) => Some(Region {
                 id: data.get::<usize, i32>(0) as u32,
