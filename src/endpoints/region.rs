@@ -74,7 +74,7 @@ pub fn modify_region(connection: &mut UserConnection, request: ModifyRegionReque
     let region = result_region.unwrap();
 
     let result = connection.database.lock().unwrap().update_region(&Region {
-        id: 0,
+        id: request.id,
         name: request.name.unwrap_or(region.name),
         transport_company: request
             .transport_company

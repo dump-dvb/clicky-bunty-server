@@ -63,10 +63,10 @@ modify_region = {
         "operation":"region/modify",
         "body":{
             "id":1,
-            "name":"dresden",
+            "name":"cologne",
             "transport_company":"cologe verkehrs betriebe",
-            "frequency":173000002,
-            "protocol":""
+            "frequency":143000002,
+            "protocol":"Test Cring"
         }
 }
 
