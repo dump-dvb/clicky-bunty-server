@@ -210,7 +210,7 @@ impl DataBaseConnection {
             &[id],
         ) {
             Ok(data) => Some(Region {
-                id: data.get(0),
+                id: data.get::<usize, i32>(0) as u32,
                 name: data.get(1),
                 transport_company: data.get(2),
                 frequency: data.get::<usize, i64>(3) as u64,
