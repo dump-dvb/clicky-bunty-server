@@ -541,7 +541,7 @@ impl DataBaseConnection {
     }
 
     pub  fn update_region(&mut self, region: &Region) -> bool {
-        match self.postgres.execute("UPDATE region SET name=$1, transport_company=$2, frequency=$3, protocol=$4 WHERE id=$5",
+        match self.postgres.execute("UPDATE regions SET name=$1, transport_company=$2, frequency=$3, protocol=$4 WHERE id=$5",
                               &[&region.name, &region.transport_company, &(region.frequency as i64), &region.protocol, &(region.id as i64)]) {
             Err(e) => {
                 println!("Error updating region: {:?}", e);
