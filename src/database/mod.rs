@@ -197,7 +197,10 @@ impl DataBaseConnection {
                 owner: Uuid::parse_str(data.get(6)).unwrap(),
                 approved: data.get(7),
             }),
-            _ => None,
+            Err(e) => {
+                println!("Error from database: query_station {:?}", e);
+                None
+            }
         }
     }
 
@@ -213,7 +216,10 @@ impl DataBaseConnection {
                 frequency: data.get::<usize, i64>(3) as u64,
                 protocol: data.get(4),
             }),
-            _ => None,
+            Err(e) => {
+                println!("Error from database: query_region {:?}", e);
+                None
+            }
         }
     }
 

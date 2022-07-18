@@ -60,10 +60,14 @@ list_regions = {
 }
 
 modify_region = {
-    "operation":"region/modify",
-    "body": {
-
-    }
+        "operation":"region/modify",
+        "body":{
+            "id":1,
+            "name":"dresden",
+            "transport_company":"cologe verkehrs betriebe",
+            "frequency":173000002,
+            "protocol":""
+        }
 }
 
 create_station = {
@@ -104,26 +108,29 @@ async def hello(uri):
         await websocket.send(json.dumps(create_regular_user))
         print(await websocket.recv())
         await websocket.send(json.dumps(login_admin))
-        print(await websocket.recv())
+        print("login_admin", await websocket.recv())
         await websocket.send(json.dumps(list_users))
-        print(await websocket.recv())
+        print("list users:", await websocket.recv())
 
         await websocket.send(json.dumps(get_session))
         session = await websocket.recv()
         print("User Id:", session)
 
         await websocket.send(json.dumps(create_region))
-        print(await websocket.recv())
+        print("create_region:", await websocket.recv())
         await websocket.send(json.dumps(list_regions))
-        print(await websocket.recv())
+        print("list_regions:", await websocket.recv())
 
         await websocket.send(json.dumps(create_station))
-        print(await websocket.recv())
+        print("Create Statio:", await websocket.recv())
         await websocket.send(json.dumps(list_stations))
         station_list = json.loads(await websocket.recv())
-        print(station_list[0])
+        print("List Stations:", station_list[0])
         approve_station["body"]["id"] = station_list[0]["id"]
         await websocket.send(json.dumps(approve_station))
-        print(await websocket.recv())
+        print("Approve Station: ",await websocket.recv())
+
+        await websocket.send(json.dumps(modify_region))
+        print("Modify Region:", await websocket.recv())
 
 asyncio.run(hello("wss://management-backend.staging.dvb.solutions"))
