@@ -185,11 +185,11 @@ impl DataBaseConnection {
     pub  fn query_station(&mut self, token: &Uuid) -> Option<Station> {
         match self.postgres.query_one(
             "SELECT token, id, name, lat, lon, region, owner, approved FROM stations WHERE id=$1",
-            &[&token],
+            &[token],
         ) {
             Ok(data) => Some(Station {
                 token: Some(data.get(0)),
-                id: Uuid::parse_str(data.get(1)).unwrap(),
+                id: data.get::<usize, Uuid>(1),
                 name: data.get(2),
                 lat: data.get(3),
                 lon: data.get(4),

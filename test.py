@@ -70,6 +70,20 @@ modify_region = {
         }
 }
 
+modify_station = {
+        "operation":"station/modify",
+        "body":{
+            "id":"2b4bfa9c-3768-43f4-b472-3a4828e251d6",
+            "token":"",
+            "name":"Dresden Station Pieschen",
+            "lat":0,
+            "lon":2,
+            "region":1,
+            "owner":"7cd2c08b-07c9-453a-a221-80f990fa68a0",
+            "approved":True
+        }
+}
+
 create_station = {
     "operation": "station/create",
     "body": {
@@ -132,5 +146,9 @@ async def hello(uri):
 
         await websocket.send(json.dumps(modify_region))
         print("Modify Region:", await websocket.recv())
+
+        await websocket.send(json.dumps(modify_station))
+        print("Modify Station:", await websocket.recv())
+
 
 asyncio.run(hello("wss://management-backend.staging.dvb.solutions"))
